@@ -78,6 +78,30 @@
   .status{ font-size:13px; padding:7px 12px; border-radius:999px; background:#eef2f7; color:#475569; }
   .status.ok{ background:#dcfce7; color:#166534; } .status.warn{ background:#fef3c7; color:#92400e; } .status.err{ background:#fee2e2; color:#991b1b; }
   .foot{ margin-top:12px; }
+
+  .ppanel{ border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin-bottom:10px; background:#f8fafc; }
+  .ppanel .ph{ font-weight:600; margin-bottom:4px; font-size:14px; }
+  .ppanel label{ display:flex; align-items:center; gap:9px; padding:6px 0; font-size:14.5px; }
+  .ppanel label input{ width:20px; height:20px; flex:0 0 auto; }
+  #printArea{ display:none; }
+  @media print {
+    body{ background:#fff; }
+    body * { visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{ display:block !important; position:absolute; left:0; top:0; width:100%; padding:0; }
+    @page{ size:A4; margin:14mm; }
+  }
+  #printArea h1{ font-size:18px; margin:0 0 6px; }
+  #printArea h2{ font-size:15px; border-bottom:2px solid #2563eb; padding-bottom:3px; margin:16px 0 8px; page-break-after:avoid; }
+  #printArea table{ width:100%; border-collapse:collapse; }
+  #printArea td, #printArea th{ border:1px solid #cbd5e1; padding:6px 8px; text-align:left; vertical-align:top; font-size:13px; }
+  #printArea th{ background:#f1f5f9; }
+  #printArea table.ptest td{ height:30px; }
+  #printArea .pg{ width:46%; } #printArea .pw{ width:27%; }
+  #printArea .ps{ margin:9px 0; page-break-inside:avoid; } #printArea .psl{ border-bottom:1px solid #cbd5e1; height:24px; margin-top:4px; }
+  #printArea .peg{ color:#555; font-size:12px; background:#fafafa; }
+  #printArea ol{ margin:4px 0 4px 20px; } #printArea li{ margin:4px 0; }
+  #printArea .pnote{ color:#555; font-size:12px; margin-top:4px; }
 </style>
 </head>
 <body>
@@ -124,6 +148,12 @@
     <!-- 资料 -->
     <div class="card hide" id="viewRes">
       <div class="unit" id="unitLabel"></div>
+      <div class="row" style="margin-bottom:10px"><button type="button" class="ghost mini" onclick="togglePrint()">🖨 打印 / 存 PDF</button></div>
+      <div class="ppanel hide" id="printPanel">
+        <div class="ph">勾选要打印的部分,再点下面:</div>
+        <div id="printOpts"></div>
+        <button type="button" style="margin-top:8px" onclick="doPrint()">打印 / 存 PDF</button>
+      </div>
       <div id="resList"></div>
     </div>
 
@@ -135,6 +165,8 @@
     </div>
   </div>
 </div>
+
+<div id="printArea"></div>
 
 <script>
 const OWNER='donnaJoey', DATA_REPO='english-learning-data', FILE='progress.json';
@@ -295,6 +327,33 @@ function renderSent(b,arr){ const m=document.createElement('div'); m.className='
 function renderRetell(b,arr){ arr.forEach(sk=>{ const h=document.createElement('div'); h.innerHTML='<div style="font-weight:700;margin:8px 0 4px">'+esc(sk.title)+'</div>'; b.appendChild(h); (sk.beats||[]).forEach((bt,i)=>{ const d=document.createElement('div'); d.className='beat'; d.setAttribute('data-n',(i+1)+'.'); d.innerHTML=bt; b.appendChild(d); }); if(sk.note){ const n=document.createElement('div'); n.className='eg'; n.style.marginTop='6px'; n.textContent=sk.note; b.appendChild(n); } }); }
 function renderLinkers(b,arr){ arr.forEach(g=>{ const d=document.createElement('div'); d.className='lkgroup'; d.innerHTML='<div class="g">'+esc(g.group)+'</div><div class="i">'+esc((g.items||[]).join(' · '))+'</div>'; b.appendChild(d); }); }
 
+const PRINT_SECTIONS=[['collocations','固定搭配清单'],['dictA','听写 A(看中文写英文)'],['dictB','听写 B(看英文写中文)'],['sentences','造句 / 回译'],['retell','Retell 逻辑骨架'],['linkers','连接词']];
+let printSel={};
+function togglePrint(){ const p=document.getElementById('printPanel'); const show=p.classList.contains('hide'); p.classList.toggle('hide'); if(show) buildPrintOpts(); }
+function buildPrintOpts(){
+  const u=(data.resources&&data.resources.units&&data.resources.units[curUnit])||{}; const box=document.getElementById('printOpts'); box.innerHTML='';
+  PRINT_SECTIONS.forEach(([key,label])=>{
+    const has=(key==='dictA'||key==='dictB')?(u.dictation&&u.dictation.length):(u[key]&&u[key].length);
+    if(!has) return;
+    if(printSel[key]===undefined) printSel[key]=true;
+    const l=document.createElement('label'); const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=printSel[key]!==false; cb.onchange=()=>{ printSel[key]=cb.checked; };
+    const sp=document.createElement('span'); sp.textContent=label; l.appendChild(cb); l.appendChild(sp); box.appendChild(l);
+  });
+}
+function doPrint(){
+  const u=(data.resources&&data.resources.units&&data.resources.units[curUnit]); if(!u) return;
+  const es=s=>(s==null?'':''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const want=k=>printSel[k]!==false;
+  let h='<h1>'+es(u.title||curUnit)+'</h1>';
+  if(u.collocations&&u.collocations.length&&want('collocations')){ h+='<h2>固定搭配清单</h2><table>'; u.collocations.forEach(x=>{ h+='<tr><td class="pg"><b>'+es(x.en)+'</b></td><td>'+es(x.cn)+'</td></tr>'; if(x.eg) h+='<tr><td colspan="2" class="peg">'+es(x.eg)+'</td></tr>'; }); h+='</table>'; }
+  if(u.dictation&&u.dictation.length&&want('dictA')){ h+='<h2>听写 A · 看中文写英文</h2><table class="ptest"><tr><th class="pg">中文</th><th class="pw">词性</th><th class="pw">英文</th></tr>'; u.dictation.forEach(x=>{ h+='<tr><td class="pg">'+es(x.cn)+'</td><td></td><td></td></tr>'; }); h+='</table>'; }
+  if(u.dictation&&u.dictation.length&&want('dictB')){ h+='<h2>听写 B · 看英文写中文</h2><table class="ptest"><tr><th class="pg">英文</th><th class="pw">词性</th><th class="pw">中文</th></tr>'; u.dictation.forEach(x=>{ h+='<tr><td class="pg">'+es(x.en)+'</td><td></td><td></td></tr>'; }); h+='</table>'; }
+  if(u.sentences&&u.sentences.length&&want('sentences')){ h+='<h2>造句 / 回译(看中文写英文)</h2>'; u.sentences.forEach((x,i)=>{ h+='<div class="ps">'+(i+1)+'. '+es(x.cn)+'<div class="psl"></div></div>'; }); }
+  if(u.retell&&u.retell.length&&want('retell')){ h+='<h2>Retell 逻辑骨架</h2>'; u.retell.forEach(sk=>{ h+='<div style="font-weight:700;margin-top:8px">'+es(sk.title)+'</div><ol>'; (sk.beats||[]).forEach(bt=>{ h+='<li>'+bt+'</li>'; }); h+='</ol>'; if(sk.note) h+='<div class="pnote">'+es(sk.note)+'</div>'; }); }
+  if(u.linkers&&u.linkers.length&&want('linkers')){ h+='<h2>连接词</h2>'; u.linkers.forEach(g=>{ h+='<div style="margin:4px 0"><b>'+es(g.group)+':</b> '+es((g.items||[]).join(' · '))+'</div>'; }); }
+  document.getElementById('printArea').innerHTML=h;
+  setTimeout(()=>window.print(), 60);
+}
 function readHash(){ const h=location.hash.replace(/^#/,''); if(!h) return; const p=new URLSearchParams(h); const t=p.get('t'), n=p.get('n'); if(t) localStorage.setItem('el_gh_token', t.replace(/\s/g,'')); if(n) localStorage.setItem('el_name', n); }
 function saveSetup(){ const name=document.getElementById('name').value.trim(); const token=document.getElementById('token').value.replace(/\s/g,''); if(!token){ alert('把那串 github_pat_… 粘进来'); return; } localStorage.setItem('el_name', name||'我'); localStorage.setItem('el_gh_token', token); boot(); }
 function logout(){ localStorage.removeItem('el_gh_token'); document.getElementById('main').classList.add('hide'); document.getElementById('setup').classList.remove('hide'); }
