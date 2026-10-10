@@ -4,19 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="打卡">
+<meta name="apple-mobile-web-app-title" content="英语打卡">
 <title>英语打卡</title>
 <style>
   :root{ font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body{ margin:0; background:#f4f6f8; color:#1b2733; }
-  .wrap{ max-width:640px; margin:0 auto; padding:14px 14px 40px; }
-  h1{ font-size:19px; margin:6px 2px 2px; }
-  .sub{ color:#64748b; font-size:12px; margin:0 2px 12px; }
-  .card{ background:#fff; border-radius:14px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:12px; }
-  label{ display:block; }
+  .wrap{ max-width:660px; margin:0 auto; padding:12px 12px 48px; }
+  h1{ font-size:18px; margin:4px 2px 10px; }
+  .card{ background:#fff; border-radius:14px; padding:14px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:12px; }
   input, textarea{ width:100%; font-size:16px; padding:10px 11px; border:1px solid #cbd5e1; border-radius:10px; font-family:inherit; background:#fff; }
-  textarea{ min-height:52px; resize:vertical; }
+  textarea{ min-height:46px; resize:vertical; }
   button{ font-size:15px; padding:9px 14px; border:0; border-radius:10px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; }
   button.ghost{ background:#e2e8f0; color:#1e293b; }
   button.mini{ font-size:13px; padding:6px 10px; }
@@ -25,45 +23,60 @@
   .meta{ font-size:12px; color:#94a3b8; }
   .setLbl{ font-size:13px; color:#475569; margin:10px 0 4px; }
 
-  /* learner tabs */
+  .tabs{ display:flex; gap:8px; margin-bottom:12px; }
+  .tab{ flex:1; background:#e2e8f0; color:#334155; font-weight:700; padding:11px; border-radius:12px; text-align:center; }
+  .tab.on{ background:#2563eb; color:#fff; }
+
   .learners{ display:flex; gap:8px; margin-bottom:10px; }
-  .lrn{ background:#eef2f7; color:#334155; border-radius:999px; padding:7px 16px; font-weight:600; }
-  .lrn.on{ background:#2563eb; color:#fff; }
+  .lrn{ background:#eef2f7; color:#334155; border-radius:999px; padding:6px 15px; font-weight:600; }
+  .lrn.on{ background:#0ea5e9; color:#fff; }
 
-  /* date bar */
-  .datebar{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
-  .datebar .d{ font-size:16px; font-weight:600; flex:1; text-align:center; }
-  .datebar button{ background:#e2e8f0; color:#1e293b; padding:8px 14px; }
+  .datebar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .datebar .d{ font-size:15px; font-weight:600; flex:1; text-align:center; }
+  .datebar button{ background:#e2e8f0; color:#1e293b; padding:7px 13px; }
 
-  /* feedback */
   .fb{ background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:14px; line-height:1.5; }
 
-  /* tasks */
-  .task{ border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin-bottom:10px; }
-  .task.done{ background:#f0fdf4; border-color:#bbf7d0; }
-  .trow{ display:flex; align-items:center; gap:10px; }
-  .trow input[type=checkbox]{ width:22px; height:22px; flex:0 0 auto; }
-  .tt{ font-size:16px; font-weight:600; }
-  .task.done .tt{ color:#16a34a; text-decoration:line-through; }
-  .tnote{ font-size:13px; color:#64748b; margin:4px 0 8px 32px; }
-  .tx{ margin-top:8px; }
-  .ti{ font-weight:600; }
-  .tn{ margin-top:8px; font-size:14px; }
-  .del{ background:#fee2e2; color:#b91c1c; padding:6px 10px; flex:0 0 auto; }
-  .add{ width:100%; background:#eff6ff; color:#2563eb; border:1px dashed #93c5fd; }
-  .empty{ color:#94a3b8; font-size:14px; text-align:center; padding:18px 8px; }
+  .ck{ display:flex; align-items:flex-start; gap:11px; padding:11px 4px; border-bottom:1px solid #f1f5f9; }
+  .ck:last-child{ border-bottom:0; }
+  .ck input[type=checkbox]{ width:24px; height:24px; flex:0 0 auto; margin-top:1px; }
+  .ck .t{ font-size:15.5px; line-height:1.35; }
+  .ck.done .t{ color:#16a34a; text-decoration:line-through; }
+  .tplrow{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .del{ background:#fee2e2; color:#b91c1c; padding:7px 11px; flex:0 0 auto; }
+  .add{ width:100%; background:#eff6ff; color:#2563eb; border:1px dashed #93c5fd; margin-top:6px; }
+  .daynote{ margin-top:12px; }
+
+  /* resources */
+  .unit{ font-size:14px; color:#475569; margin:0 2px 10px; }
+  .res{ border:1px solid #e2e8f0; border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .res h3{ margin:0; font-size:15.5px; padding:13px 14px; background:#f8fafc; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  .res h3 .arw{ color:#94a3b8; font-weight:400; }
+  .res .body{ padding:4px 14px 14px; }
+  .res .tools{ margin:2px 0 10px; }
+  .item{ padding:9px 0; border-bottom:1px solid #f1f5f9; font-size:14.5px; line-height:1.5; }
+  .item:last-child{ border-bottom:0; }
+  .en{ font-weight:600; color:#0f172a; }
+  .cn{ color:#475569; }
+  .eg{ color:#64748b; font-size:13px; margin-top:3px; }
+  .blurans .en{ filter:blur(5px); }
+  .reveal{ cursor:pointer; color:#2563eb; }
+  .reveal.show{ filter:none !important; }
+  .beat{ padding:7px 0 7px 22px; position:relative; font-size:14.5px; line-height:1.45; }
+  .beat b{ color:#0f172a; }
+  .beat:before{ content:attr(data-n); position:absolute; left:0; top:7px; color:#0ea5e9; font-weight:700; }
+  .lkgroup{ margin:8px 0; } .lkgroup .g{ font-weight:700; color:#0f172a; font-size:14px; } .lkgroup .i{ color:#334155; font-size:14px; }
 
   .status{ font-size:13px; padding:7px 12px; border-radius:999px; background:#eef2f7; color:#475569; }
   .status.ok{ background:#dcfce7; color:#166534; }
   .status.warn{ background:#fef3c7; color:#92400e; }
   .status.err{ background:#fee2e2; color:#991b1b; }
-  .foot{ margin-top:14px; }
+  .foot{ margin-top:12px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>英语打卡</h1>
-  <div class="sub">家长定每日任务 · 学习者打卡 · Kiro 写反馈 · 数据实时共享</div>
 
   <!-- 首次:钥匙 -->
   <div class="card hide" id="setup">
@@ -75,70 +88,85 @@
   </div>
 
   <!-- 主界面 -->
-  <div class="card hide" id="main">
-    <div class="fb hide" id="fb"></div>
-    <div class="learners" id="learners"></div>
-    <div class="datebar">
-      <button type="button" onclick="shiftDate(-1)">‹</button>
-      <div class="d" id="dateLabel"></div>
-      <button type="button" onclick="shiftDate(1)">›</button>
-      <button type="button" onclick="gotoToday()">今天</button>
+  <div class="hide" id="main">
+    <div class="tabs">
+      <div class="tab" id="tabCheck" onclick="setView('check')">📋 打卡</div>
+      <div class="tab" id="tabRes" onclick="setView('res')">📚 资料</div>
     </div>
-    <div id="tasks"></div>
-    <div class="row foot">
-      <span class="status" id="status">…</span>
-      <button type="button" class="ghost mini" onclick="refreshNow()">拉取最新</button>
-      <button type="button" class="ghost mini" id="editBtn" onclick="toggleEdit()">编辑任务</button>
+
+    <!-- 打卡 -->
+    <div class="card" id="viewCheck">
+      <div class="fb hide" id="fb"></div>
+      <div class="learners" id="learners"></div>
+      <div class="datebar">
+        <button type="button" onclick="shiftDate(-1)">‹</button>
+        <div class="d" id="dateLabel"></div>
+        <button type="button" onclick="shiftDate(1)">›</button>
+        <button type="button" onclick="gotoToday()">今天</button>
+      </div>
+      <div id="checklist"></div>
+      <textarea class="daynote" id="daynote" placeholder="今天的备注 / 你的判断 / 新需求(可选)"></textarea>
+      <div class="row foot">
+        <span class="status" id="status">…</span>
+        <button type="button" class="ghost mini" onclick="refreshNow()">拉取最新</button>
+        <button type="button" class="ghost mini" id="editBtn" onclick="toggleEditTpl()">编辑清单</button>
+      </div>
+      <div class="meta foot" id="who"></div>
+      <div class="row foot"><button type="button" class="ghost mini" onclick="logout()">换钥匙 / 退出</button></div>
     </div>
-    <div class="meta foot" id="who"></div>
-    <div class="row foot"><button type="button" class="ghost mini" onclick="logout()">换钥匙 / 退出</button></div>
+
+    <!-- 资料 -->
+    <div class="card hide" id="viewRes">
+      <div class="unit" id="unitLabel"></div>
+      <div id="resList"></div>
+      <div class="row foot"><span class="status" id="status2">…</span><button type="button" class="ghost mini" onclick="refreshNow()">拉取最新</button></div>
+    </div>
   </div>
 </div>
 
 <script>
 const OWNER='donnaJoey', DATA_REPO='english-learning-data', FILE='progress.json';
-
 let data=null, sha=null, dirty=false, saving=false, conflicted=false, timer=null;
-let curLearner='孩子', curDate=todayStr(), editMode=false;
+let curLearner='我', curDate=todayStr(), editTpl=false, view='check';
+let openRes={};
 
 function tok(){ return localStorage.getItem('el_gh_token')||''; }
 function me(){ return localStorage.getItem('el_name')||'我'; }
 function now(){ return new Date().toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return (s==null?'':''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
 function b64decode(b64){ return decodeURIComponent(escape(atob((b64||'').replace(/\n/g,'')))); }
-function status(msg,kind){ const el=document.getElementById('status'); el.textContent=msg; el.className='status'+(kind?' '+kind:''); }
+function status(msg,kind){ ['status','status2'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.textContent=msg; el.className='status'+(kind?' '+kind:''); } }); }
 
 async function gh(method, path, body){
   const res=await fetch('https://api.github.com/repos/'+OWNER+'/'+DATA_REPO+'/'+path,{
     method, headers:{'Authorization':'Bearer '+tok(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},
-    body: body?JSON.stringify(body):undefined, cache:'no-store'
-  });
+    body: body?JSON.stringify(body):undefined, cache:'no-store'});
   let j=null; try{ j=await res.json(); }catch(e){}
   return {status:res.status, json:j};
 }
 
-function emptyDoc(){ return {learners:['我','孩子'], days:{'我':{}, '孩子':{}}}; }
+function emptyDoc(){ return {learners:['我','孩子'], template:{'我':[],'孩子':[]}, days:{'我':{},'孩子':{}}, resources:{current:'',units:{}}}; }
 function ensureDoc(){
   if(!data||typeof data!=='object') data=emptyDoc();
   if(!Array.isArray(data.learners)||!data.learners.length) data.learners=['我','孩子'];
-  if(!data.days||typeof data.days!=='object') data.days={};
-  data.learners.forEach(L=>{ if(!data.days[L]) data.days[L]={}; });
+  data.template=data.template||{}; data.days=data.days||{};
+  data.learners.forEach(L=>{ if(!Array.isArray(data.template[L])) data.template[L]=[]; if(!data.days[L]) data.days[L]={}; });
+  data.resources=data.resources||{current:'',units:{}};
   if(!data.learners.includes(curLearner)) curLearner=data.learners[0];
 }
-function dayObj(){ const L=data.days[curLearner]||(data.days[curLearner]={}); if(!L[curDate]) L[curDate]={tasks:[],feedback:null}; return L[curDate]; }
+function dayObj(){ const L=data.days[curLearner]||(data.days[curLearner]={}); if(!L[curDate]) L[curDate]={checked:{},note:'',feedback:null}; if(!L[curDate].checked) L[curDate].checked={}; return L[curDate]; }
 
 async function load(){
   status('读取中…');
   const r=await gh('GET','contents/'+FILE);
   if(r.status===200){ sha=r.json.sha; try{ data=JSON.parse(b64decode(r.json.content)); }catch(e){ data=emptyDoc(); } ensureDoc(); render(); status('已读取 · '+now(),'ok'); }
   else if(r.status===401){ status('钥匙没通过 (401):当前长度 '+tok().length+' 位(应为 93)。点"换钥匙 / 退出"重试','err'); }
-  else if(r.status===403){ status('钥匙被拒 (403):权限不足','err'); }
-  else if(r.status===404){ sha=null; data=emptyDoc(); ensureDoc(); render(); status('还没有数据,加个任务就会创建'); }
+  else if(r.status===403){ status('钥匙被拒 (403)','err'); }
+  else if(r.status===404){ sha=null; data=emptyDoc(); ensureDoc(); render(); status('还没有数据'); }
   else { status('读取出错 '+r.status,'err'); }
 }
-
 function schedule(){ dirty=true; clearTimeout(timer); timer=setTimeout(push,800); }
 async function push(){
   if(conflicted||saving) return;
@@ -156,77 +184,92 @@ async function poll(){
 }
 function refreshNow(){ conflicted=false; dirty=false; load(); }
 
+function setView(v){ view=v; render(); }
+
 function render(){
   ensureDoc();
-  // learners
+  document.getElementById('tabCheck').className='tab'+(view==='check'?' on':'');
+  document.getElementById('tabRes').className='tab'+(view==='res'?' on':'');
+  document.getElementById('viewCheck').classList.toggle('hide', view!=='check');
+  document.getElementById('viewRes').classList.toggle('hide', view!=='res');
+  if(view==='check') renderCheck(); else renderRes();
+}
+
+function renderCheck(){
   const lb=document.getElementById('learners'); lb.innerHTML='';
   data.learners.forEach(L=>{ const b=document.createElement('button'); b.type='button'; b.className='lrn'+(L===curLearner?' on':''); b.textContent=L; b.onclick=()=>{curLearner=L; render();}; lb.appendChild(b); });
-  // date
   const d=new Date(curDate+'T00:00:00'); const wd=['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
   document.getElementById('dateLabel').textContent=curDate+' '+wd+(curDate===todayStr()?' · 今天':'');
-  // feedback
   const day=dayObj(); const fb=document.getElementById('fb');
   if(day.feedback && day.feedback.text){ fb.classList.remove('hide'); fb.innerHTML='<b>📣 Kiro 的反馈'+(day.feedback.at?' · '+esc(day.feedback.at):'')+'</b><br>'+esc(day.feedback.text).replace(/\n/g,'<br>'); }
   else { fb.classList.add('hide'); fb.innerHTML=''; }
-  document.getElementById('editBtn').textContent=editMode?'完成编辑':'编辑任务';
+  document.getElementById('editBtn').textContent=editTpl?'完成编辑':'编辑清单';
   document.getElementById('who').textContent='当前身份:'+me()+' · 正在看:'+curLearner;
-  renderTasks();
+  const nt=document.getElementById('daynote'); if(document.activeElement!==nt) nt.value=day.note||'';
+  nt.oninput=()=>{ day.note=nt.value; schedule(); };
+  renderList();
 }
-
-function renderTasks(){
-  const day=dayObj(); const box=document.getElementById('tasks'); box.innerHTML='';
-  if(!day.tasks.length){ const e=document.createElement('div'); e.className='empty'; e.textContent=editMode?'这天还没有任务,点下面"添加任务"。':'这天还没有任务。点"编辑任务"来添加。'; box.appendChild(e); }
-  day.tasks.forEach((t,i)=>{
-    const el=document.createElement('div'); el.className='task'+(t.done?' done':'');
-    if(editMode){
-      const r=document.createElement('div'); r.className='trow';
-      const ti=document.createElement('input'); ti.className='ti'; ti.value=t.title||''; ti.placeholder='任务标题'; ti.oninput=()=>{t.title=ti.value; schedule();};
-      const del=document.createElement('button'); del.type='button'; del.className='del'; del.textContent='✕'; del.onclick=()=>{ day.tasks.splice(i,1); schedule(); renderTasks(); };
-      r.appendChild(ti); r.appendChild(del); el.appendChild(r);
-      const tn=document.createElement('input'); tn.className='tn'; tn.value=t.note||''; tn.placeholder='说明 / 时长(可选)'; tn.oninput=()=>{t.note=tn.value; schedule();};
-      el.appendChild(tn);
-    } else {
-      const lab=document.createElement('label'); lab.className='trow';
-      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!t.done; cb.onchange=()=>{ t.done=cb.checked; el.classList.toggle('done',t.done); schedule(); };
-      const tt=document.createElement('span'); tt.className='tt'; tt.textContent=t.title||'(未命名任务)';
-      lab.appendChild(cb); lab.appendChild(tt); el.appendChild(lab);
-      if(t.note){ const n=document.createElement('div'); n.className='tnote'; n.textContent=t.note; el.appendChild(n); }
-      const tx=document.createElement('textarea'); tx.className='tx'; tx.value=t.text||''; tx.placeholder='写点什么:做得怎样 / 判断 / 新需求(可选)'; tx.oninput=()=>{t.text=tx.value; schedule();};
-      el.appendChild(tx);
-    }
-    box.appendChild(el);
-  });
-  if(editMode){ const add=document.createElement('button'); add.type='button'; add.className='add'; add.textContent='+ 添加任务'; add.onclick=()=>{ day.tasks.push({id:Date.now(),title:'',note:'',done:false,text:''}); schedule(); renderTasks(); }; box.appendChild(add); }
+function renderList(){
+  const tpl=data.template[curLearner]||[]; const day=dayObj(); const box=document.getElementById('checklist'); box.innerHTML='';
+  if(editTpl){
+    tpl.forEach((it,i)=>{ const r=document.createElement('div'); r.className='tplrow';
+      const inp=document.createElement('input'); inp.value=it.title||''; inp.placeholder='打卡项'; inp.oninput=()=>{it.title=inp.value; schedule();};
+      const del=document.createElement('button'); del.type='button'; del.className='del'; del.textContent='✕'; del.onclick=()=>{ tpl.splice(i,1); schedule(); renderList(); };
+      r.appendChild(inp); r.appendChild(del); box.appendChild(r); });
+    const add=document.createElement('button'); add.type='button'; add.className='add'; add.textContent='+ 添加打卡项'; add.onclick=()=>{ tpl.push({id:'i'+Date.now(),title:''}); schedule(); renderList(); }; box.appendChild(add);
+  } else {
+    if(!tpl.length){ const e=document.createElement('div'); e.className='meta'; e.textContent='还没有打卡项。点"编辑清单"添加。'; box.appendChild(e); }
+    tpl.forEach(it=>{ const done=!!day.checked[it.id]; const row=document.createElement('label'); row.className='ck'+(done?' done':'');
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=done; cb.onchange=()=>{ if(cb.checked) day.checked[it.id]=true; else delete day.checked[it.id]; row.className='ck'+(cb.checked?' done':''); schedule(); };
+      const t=document.createElement('span'); t.className='t'; t.textContent=it.title||'(未命名)';
+      row.appendChild(cb); row.appendChild(t); box.appendChild(row); });
+  }
 }
-
 function shiftDate(n){ const d=new Date(curDate+'T00:00:00'); d.setDate(d.getDate()+n); curDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); render(); }
 function gotoToday(){ curDate=todayStr(); render(); }
-function toggleEdit(){ editMode=!editMode; render(); }
+function toggleEditTpl(){ editTpl=!editTpl; render(); }
 
-function readHash(){
-  const h=location.hash.replace(/^#/,''); if(!h) return;
-  const p=new URLSearchParams(h); const t=p.get('t'), n=p.get('n');
-  if(t) localStorage.setItem('el_gh_token', t.replace(/\s/g,''));
-  if(n) localStorage.setItem('el_name', n);
-  history.replaceState(null,'',location.pathname+location.search);
+function renderRes(){
+  const res=data.resources||{units:{}}; const u=res.units[res.current]; const box=document.getElementById('resList');
+  document.getElementById('unitLabel').textContent = u? (u.title||res.current) : '还没有资料。让 Kiro 写进来就会出现在这里。';
+  box.innerHTML='';
+  if(!u) return;
+  const cards=[
+    ['collocations','固定搭配清单(PET 水平)', renderColl],
+    ['dictation','听写集(词 + 搭配)', renderDict],
+    ['sentences','造句 / 回译集', renderSent],
+    ['retell','Retell 逻辑骨架', renderRetell],
+    ['linkers','连接词', renderLinkers],
+  ];
+  cards.forEach(([key,title,fn])=>{
+    const arr=u[key]; if(!arr||!arr.length) return;
+    const open=!!openRes[key];
+    const c=document.createElement('div'); c.className='res';
+    const h=document.createElement('h3'); h.innerHTML='<span>'+esc(title)+' <span class="meta">('+arr.length+')</span></span><span class="arw">'+(open?'▾':'▸')+'</span>';
+    h.onclick=()=>{ openRes[key]=!openRes[key]; renderRes(); };
+    c.appendChild(h);
+    if(open){ const b=document.createElement('div'); b.className='body'; fn(b,arr,key); c.appendChild(b); }
+    box.appendChild(c);
+  });
 }
-function saveSetup(){
-  const name=document.getElementById('name').value.trim();
-  const token=document.getElementById('token').value.replace(/\s/g,'');
-  if(!token){ alert('把那串 github_pat_… 粘进来'); return; }
-  localStorage.setItem('el_name', name||'我');
-  localStorage.setItem('el_gh_token', token);
-  boot();
+function answerToggle(b,key){
+  const btn=document.createElement('button'); btn.type='button'; btn.className='ghost mini tools'; btn.textContent='答案:显示';
+  let shown=true;
+  const apply=()=>{ b.classList.toggle('blurans',!shown); btn.textContent='答案:'+(shown?'显示':'隐藏'); };
+  btn.onclick=()=>{ shown=!shown; apply(); };
+  b.appendChild(btn); apply();
 }
+function renderColl(b,arr){ arr.forEach(x=>{ const d=document.createElement('div'); d.className='item'; d.innerHTML='<span class="en">'+esc(x.en)+'</span> — <span class="cn">'+esc(x.cn)+'</span>'+(x.eg?'<div class="eg">'+esc(x.eg)+'</div>':''); b.appendChild(d); }); }
+function renderDict(b,arr){ answerToggle(b,'dictation'); arr.forEach(x=>{ const d=document.createElement('div'); d.className='item'; d.innerHTML='<span class="en">'+esc(x.en)+'</span> — <span class="cn">'+esc(x.cn)+'</span>'; b.appendChild(d); }); }
+function renderSent(b,arr){ b.appendChild(mk('<div class="meta tools">看中文,先自己写英文,再点展开对答案。</div>')); arr.forEach(x=>{ const d=document.createElement('div'); d.className='item'; d.innerHTML='<div class="cn">'+esc(x.cn)+'</div><div class="en reveal" style="filter:blur(5px)">'+esc(x.en)+'</div>'; const en=d.querySelector('.en'); en.onclick=()=>{ en.style.filter='none'; }; b.appendChild(d); }); }
+function renderRetell(b,arr){ arr.forEach(sk=>{ const h=document.createElement('div'); h.innerHTML='<div style="font-weight:700;margin:8px 0 4px">'+esc(sk.title)+'</div>'; b.appendChild(h); (sk.beats||[]).forEach((bt,i)=>{ const d=document.createElement('div'); d.className='beat'; d.setAttribute('data-n',(i+1)+'.'); d.innerHTML=esc(bt); b.appendChild(d); }); if(sk.note){ const n=document.createElement('div'); n.className='eg'; n.style.marginTop='6px'; n.textContent=sk.note; b.appendChild(n); } }); }
+function renderLinkers(b,arr){ arr.forEach(g=>{ const d=document.createElement('div'); d.className='lkgroup'; d.innerHTML='<div class="g">'+esc(g.group)+'</div><div class="i">'+esc((g.items||[]).join(' · '))+'</div>'; b.appendChild(d); }); }
+function mk(html){ const d=document.createElement('div'); d.innerHTML=html; return d.firstChild; }
+
+function readHash(){ const h=location.hash.replace(/^#/,''); if(!h) return; const p=new URLSearchParams(h); const t=p.get('t'), n=p.get('n'); if(t) localStorage.setItem('el_gh_token', t.replace(/\s/g,'')); if(n) localStorage.setItem('el_name', n); history.replaceState(null,'',location.pathname+location.search); }
+function saveSetup(){ const name=document.getElementById('name').value.trim(); const token=document.getElementById('token').value.replace(/\s/g,''); if(!token){ alert('把那串 github_pat_… 粘进来'); return; } localStorage.setItem('el_name', name||'我'); localStorage.setItem('el_gh_token', token); boot(); }
 function logout(){ localStorage.removeItem('el_gh_token'); document.getElementById('main').classList.add('hide'); document.getElementById('setup').classList.remove('hide'); }
-
-function boot(){
-  readHash();
-  if(!tok()){ document.getElementById('setup').classList.remove('hide'); document.getElementById('main').classList.add('hide'); return; }
-  document.getElementById('setup').classList.add('hide');
-  document.getElementById('main').classList.remove('hide');
-  load();
-}
+function boot(){ readHash(); if(!tok()){ document.getElementById('setup').classList.remove('hide'); document.getElementById('main').classList.add('hide'); return; } document.getElementById('setup').classList.add('hide'); document.getElementById('main').classList.remove('hide'); load(); }
 
 setInterval(poll, 15000);
 boot();
