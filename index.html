@@ -139,7 +139,7 @@
 <script>
 const OWNER='donnaJoey', DATA_REPO='english-learning-data', FILE='progress.json';
 let data=null, sha=null, dirty=false, saving=false, conflicted=false, timer=null;
-let curLearner='我', curDate=todayStr(), editTpl=false, view='check', openRes={};
+let curLearner='我', curDate=todayStr(), editTpl=false, view='check', openRes={}, curUnit=null;
 
 function tok(){ return localStorage.getItem('el_gh_token')||''; }
 function me(){ return localStorage.getItem('el_name')||'我'; }
@@ -274,9 +274,13 @@ function renderStats(){
 }
 
 function renderRes(){
-  const res=data.resources||{units:{}}; const u=res.units[res.current]; const box=document.getElementById('resList');
-  document.getElementById('unitLabel').textContent = u? (u.title||res.current) : '还没有资料。让 Kiro 写进来就会出现在这里。';
-  box.innerHTML=''; if(!u) return;
+  const res=data.resources||{units:{}}; const ids=Object.keys(res.units||{});
+  if(curUnit===null || !res.units[curUnit]) curUnit=(res.current && res.units[res.current])? res.current : (ids[0]||null);
+  const box=document.getElementById('resList'); const lab=document.getElementById('unitLabel'); box.innerHTML='';
+  if(!curUnit){ lab.textContent='还没有资料。让 Kiro 写进来就会出现在这里。'; return; }
+  if(ids.length>1){ const sw=document.createElement('div'); sw.className='learners'; sw.style.marginBottom='8px'; ids.forEach(id=>{ const b=document.createElement('button'); b.type='button'; b.className='lrn'+(id===curUnit?' on':''); b.textContent=id; b.onclick=()=>{ curUnit=id; openRes={}; renderRes(); }; sw.appendChild(b); }); box.appendChild(sw); }
+  const u=res.units[curUnit];
+  lab.textContent=u.title||curUnit;
   const cards=[['collocations','固定搭配清单(PET 水平)',renderColl],['dictation','听写集(词 + 搭配)',renderDict],['sentences','造句 / 回译集',renderSent],['retell','Retell 逻辑骨架',renderRetell],['linkers','连接词',renderLinkers]];
   cards.forEach(([key,title,fn])=>{ const arr=u[key]; if(!arr||!arr.length) return; const open=!!openRes[key];
     const c=document.createElement('div'); c.className='res';
