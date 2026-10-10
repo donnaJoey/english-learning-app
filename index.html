@@ -4,148 +4,204 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>打卡 · 连接测试</title>
+<meta name="apple-mobile-web-app-title" content="打卡">
+<title>英语打卡</title>
 <style>
-  :root{ font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
-  *{ box-sizing:border-box; }
+  :root{ font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body{ margin:0; background:#f4f6f8; color:#1b2733; }
-  .wrap{ max-width:620px; margin:0 auto; padding:16px; }
-  h1{ font-size:19px; margin:8px 0 2px; }
-  .sub{ color:#64748b; font-size:13px; margin-bottom:14px; }
-  .card{ background:#fff; border-radius:14px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px; }
-  label{ display:block; font-size:13px; color:#475569; margin:10px 0 4px; }
-  input, textarea{ width:100%; font-size:16px; padding:11px 12px; border:1px solid #cbd5e1; border-radius:10px; font-family:inherit; }
-  textarea{ min-height:120px; resize:vertical; }
-  button{ font-size:15px; padding:11px 16px; border:0; border-radius:10px; background:#2563eb; color:#fff; font-weight:600; }
+  .wrap{ max-width:640px; margin:0 auto; padding:14px 14px 40px; }
+  h1{ font-size:19px; margin:6px 2px 2px; }
+  .sub{ color:#64748b; font-size:12px; margin:0 2px 12px; }
+  .card{ background:#fff; border-radius:14px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:12px; }
+  label{ display:block; }
+  input, textarea{ width:100%; font-size:16px; padding:10px 11px; border:1px solid #cbd5e1; border-radius:10px; font-family:inherit; background:#fff; }
+  textarea{ min-height:52px; resize:vertical; }
+  button{ font-size:15px; padding:9px 14px; border:0; border-radius:10px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; }
   button.ghost{ background:#e2e8f0; color:#1e293b; }
+  button.mini{ font-size:13px; padding:6px 10px; }
   .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  .status{ font-size:13px; padding:8px 12px; border-radius:999px; background:#eef2f7; color:#475569; display:inline-block; }
+  .hide{ display:none !important; }
+  .meta{ font-size:12px; color:#94a3b8; }
+  .setLbl{ font-size:13px; color:#475569; margin:10px 0 4px; }
+
+  /* learner tabs */
+  .learners{ display:flex; gap:8px; margin-bottom:10px; }
+  .lrn{ background:#eef2f7; color:#334155; border-radius:999px; padding:7px 16px; font-weight:600; }
+  .lrn.on{ background:#2563eb; color:#fff; }
+
+  /* date bar */
+  .datebar{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .datebar .d{ font-size:16px; font-weight:600; flex:1; text-align:center; }
+  .datebar button{ background:#e2e8f0; color:#1e293b; padding:8px 14px; }
+
+  /* feedback */
+  .fb{ background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:14px; line-height:1.5; }
+
+  /* tasks */
+  .task{ border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin-bottom:10px; }
+  .task.done{ background:#f0fdf4; border-color:#bbf7d0; }
+  .trow{ display:flex; align-items:center; gap:10px; }
+  .trow input[type=checkbox]{ width:22px; height:22px; flex:0 0 auto; }
+  .tt{ font-size:16px; font-weight:600; }
+  .task.done .tt{ color:#16a34a; text-decoration:line-through; }
+  .tnote{ font-size:13px; color:#64748b; margin:4px 0 8px 32px; }
+  .tx{ margin-top:8px; }
+  .ti{ font-weight:600; }
+  .tn{ margin-top:8px; font-size:14px; }
+  .del{ background:#fee2e2; color:#b91c1c; padding:6px 10px; flex:0 0 auto; }
+  .add{ width:100%; background:#eff6ff; color:#2563eb; border:1px dashed #93c5fd; }
+  .empty{ color:#94a3b8; font-size:14px; text-align:center; padding:18px 8px; }
+
+  .status{ font-size:13px; padding:7px 12px; border-radius:999px; background:#eef2f7; color:#475569; }
   .status.ok{ background:#dcfce7; color:#166534; }
   .status.warn{ background:#fef3c7; color:#92400e; }
   .status.err{ background:#fee2e2; color:#991b1b; }
-  .meta{ font-size:12px; color:#94a3b8; margin-top:8px; }
-  .hide{ display:none; }
+  .foot{ margin-top:14px; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>打卡 · 连接测试</h1>
-  <div class="sub">这一页只用来验证"手机改一下、iPad 立刻看到"。成了之后再换成真正的打卡界面。</div>
+  <h1>英语打卡</h1>
+  <div class="sub">家长定每日任务 · 学习者打卡 · Kiro 写反馈 · 数据实时共享</div>
 
-  <!-- 首次进入:输钥匙 -->
-  <div class="card" id="setup">
-    <label>你是谁?(随便填,比如 妈妈 / 孩子)</label>
+  <!-- 首次:钥匙 -->
+  <div class="card hide" id="setup">
+    <div class="setLbl">你是谁?(随便填,比如 妈妈 / 孩子)</div>
     <input id="name" placeholder="妈妈">
-    <label>GitHub 钥匙(那串 github_pat_… 粘进来,只存在这台设备上)</label>
+    <div class="setLbl">GitHub 钥匙(github_pat_… 粘进来,只存这台设备)</div>
     <input id="token" placeholder="github_pat_..." autocapitalize="off" autocorrect="off" spellcheck="false">
-    <div class="row" style="margin-top:12px;">
-      <button type="button" onclick="saveSetup()">进入</button>
-      <span class="meta">钥匙只存在你这台设备的浏览器里,不会上传到网页。</span>
-    </div>
-    <div class="meta" id="setupMsg" style="color:#991b1b;margin-top:10px;"></div>
+    <div class="row" style="margin-top:12px;"><button type="button" onclick="saveSetup()">进入</button></div>
   </div>
 
   <!-- 主界面 -->
   <div class="card hide" id="main">
-    <label>共享便签(两台设备看到的是同一段文字)</label>
-    <textarea id="note" placeholder="在这里打字…"></textarea>
-    <div class="row" style="margin-top:12px;">
+    <div class="fb hide" id="fb"></div>
+    <div class="learners" id="learners"></div>
+    <div class="datebar">
+      <button type="button" onclick="shiftDate(-1)">‹</button>
+      <div class="d" id="dateLabel"></div>
+      <button type="button" onclick="shiftDate(1)">›</button>
+      <button type="button" onclick="gotoToday()">今天</button>
+    </div>
+    <div id="tasks"></div>
+    <div class="row foot">
       <span class="status" id="status">…</span>
-      <button type="button" class="ghost" onclick="refreshNow()">拉取最新</button>
+      <button type="button" class="ghost mini" onclick="refreshNow()">拉取最新</button>
+      <button type="button" class="ghost mini" id="editBtn" onclick="toggleEdit()">编辑任务</button>
     </div>
-    <div class="meta" id="meta"></div>
-    <div class="meta" id="who" style="margin-top:14px;"></div>
-    <div class="row" style="margin-top:6px;">
-      <button type="button" class="ghost" onclick="logout()">换钥匙 / 退出</button>
-    </div>
+    <div class="meta foot" id="who"></div>
+    <div class="row foot"><button type="button" class="ghost mini" onclick="logout()">换钥匙 / 退出</button></div>
   </div>
 </div>
 
 <script>
-const OWNER='donnaJoey';
-const DATA_REPO='english-learning-data';
-const FILE='progress.json';
+const OWNER='donnaJoey', DATA_REPO='english-learning-data', FILE='progress.json';
 
-let state={demo:{note:'',by:'',at:''}};
-let sha=null, dirty=false, saving=false, conflicted=false, timer=null;
+let data=null, sha=null, dirty=false, saving=false, conflicted=false, timer=null;
+let curLearner='孩子', curDate=todayStr(), editMode=false;
 
 function tok(){ return localStorage.getItem('el_gh_token')||''; }
-function me(){ return localStorage.getItem('el_name')||''; }
+function me(){ return localStorage.getItem('el_name')||'我'; }
 function now(){ return new Date().toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
-
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
 function b64decode(b64){ return decodeURIComponent(escape(atob((b64||'').replace(/\n/g,'')))); }
-
-function status(msg, kind){ const el=document.getElementById('status'); el.textContent=msg; el.className='status'+(kind?' '+kind:''); }
+function status(msg,kind){ const el=document.getElementById('status'); el.textContent=msg; el.className='status'+(kind?' '+kind:''); }
 
 async function gh(method, path, body){
-  const res = await fetch('https://api.github.com/repos/'+OWNER+'/'+DATA_REPO+'/'+path, {
-    method,
-    headers:{ 'Authorization':'Bearer '+tok(), 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' },
-    body: body ? JSON.stringify(body) : undefined,
-    cache:'no-store'
+  const res=await fetch('https://api.github.com/repos/'+OWNER+'/'+DATA_REPO+'/'+path,{
+    method, headers:{'Authorization':'Bearer '+tok(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},
+    body: body?JSON.stringify(body):undefined, cache:'no-store'
   });
   let j=null; try{ j=await res.json(); }catch(e){}
-  return { status:res.status, json:j };
+  return {status:res.status, json:j};
 }
 
-function render(){
-  const t=document.getElementById('note');
-  if(document.activeElement!==t) t.value = state.demo.note||'';
-  document.getElementById('meta').textContent = state.demo.at ? ('最后修改:'+(state.demo.by||'?')+' · '+state.demo.at) : '还没有人填过';
+function emptyDoc(){ return {learners:['我','孩子'], days:{'我':{}, '孩子':{}}}; }
+function ensureDoc(){
+  if(!data||typeof data!=='object') data=emptyDoc();
+  if(!Array.isArray(data.learners)||!data.learners.length) data.learners=['我','孩子'];
+  if(!data.days||typeof data.days!=='object') data.days={};
+  data.learners.forEach(L=>{ if(!data.days[L]) data.days[L]={}; });
+  if(!data.learners.includes(curLearner)) curLearner=data.learners[0];
 }
+function dayObj(){ const L=data.days[curLearner]||(data.days[curLearner]={}); if(!L[curDate]) L[curDate]={tasks:[],feedback:null}; return L[curDate]; }
 
 async function load(){
   status('读取中…');
-  const r = await gh('GET','contents/'+FILE);
-  if(r.status===200){ sha=r.json.sha; try{ state=JSON.parse(b64decode(r.json.content)); }catch(e){ state={demo:{note:'',by:'',at:''}}; } if(!state.demo) state.demo={note:'',by:'',at:''}; render(); status('已读取 · '+now(),'ok'); }
-  else if(r.status===401){ status('钥匙没通过 (401):当前长度 '+tok().length+' 位(应为 93)。点"换钥匙 / 退出"重试,或用二维码扫码登录','err'); }
-  else if(r.status===403){ status('钥匙被拒 (403):权限不足。点"换钥匙 / 退出"重试','err'); }
-  else if(r.status===404){ sha=null; status('读不到数据 (404):钥匙可能没覆盖到仓库,或粘漏了。点"换钥匙 / 退出"重试','err'); }
+  const r=await gh('GET','contents/'+FILE);
+  if(r.status===200){ sha=r.json.sha; try{ data=JSON.parse(b64decode(r.json.content)); }catch(e){ data=emptyDoc(); } ensureDoc(); render(); status('已读取 · '+now(),'ok'); }
+  else if(r.status===401){ status('钥匙没通过 (401):当前长度 '+tok().length+' 位(应为 93)。点"换钥匙 / 退出"重试','err'); }
+  else if(r.status===403){ status('钥匙被拒 (403):权限不足','err'); }
+  else if(r.status===404){ sha=null; data=emptyDoc(); ensureDoc(); render(); status('还没有数据,加个任务就会创建'); }
   else { status('读取出错 '+r.status,'err'); }
 }
 
 function schedule(){ dirty=true; clearTimeout(timer); timer=setTimeout(push,800); }
-
 async function push(){
   if(conflicted||saving) return;
   saving=true; status('保存中…');
-  state.demo.by=me(); state.demo.at=now();
-  const body={ message:'update from '+(me()||'app'), content:b64encode(JSON.stringify(state,null,2)) };
-  if(sha) body.sha=sha;
-  const r = await gh('PUT','contents/'+FILE, body);
+  const r=await gh('PUT','contents/'+FILE,{message:'update by '+me(), content:b64encode(JSON.stringify(data,null,2)), sha:sha||undefined});
   saving=false;
   if(r.status===200||r.status===201){ sha=r.json.content.sha; dirty=false; status('已保存 · '+now(),'ok'); }
   else if(r.status===409||r.status===422){ conflicted=true; status('有人刚改过,点"拉取最新"再改','warn'); }
   else { status('没存上 ('+r.status+'),下次改动再试','err'); }
 }
-
 async function poll(){
   if(dirty||saving||conflicted) return;
-  const r = await gh('GET','contents/'+FILE);
-  if(r.status===200 && r.json.sha!==sha){
-    sha=r.json.sha; try{ state=JSON.parse(b64decode(r.json.content)); }catch(e){ return; }
-    if(!state.demo) state.demo={note:'',by:'',at:''};
-    render(); status('已更新:'+(state.demo.by||'对方')+' 的改动','ok');
-  }
+  const r=await gh('GET','contents/'+FILE);
+  if(r.status===200 && r.json.sha!==sha){ sha=r.json.sha; try{ data=JSON.parse(b64decode(r.json.content)); }catch(e){ return; } ensureDoc(); render(); status('已更新:别人的改动已同步','ok'); }
 }
-
 function refreshNow(){ conflicted=false; dirty=false; load(); }
 
-function saveSetup(){
-  const name=document.getElementById('name').value.trim();
-  const token=document.getElementById('token').value.replace(/\s/g,'');
-  if(!token){ alert('把那串 github_pat_… 粘进来'); return; }
-  localStorage.setItem('el_name', name||'我');
-  localStorage.setItem('el_gh_token', token);
-  boot();
+function render(){
+  ensureDoc();
+  // learners
+  const lb=document.getElementById('learners'); lb.innerHTML='';
+  data.learners.forEach(L=>{ const b=document.createElement('button'); b.type='button'; b.className='lrn'+(L===curLearner?' on':''); b.textContent=L; b.onclick=()=>{curLearner=L; render();}; lb.appendChild(b); });
+  // date
+  const d=new Date(curDate+'T00:00:00'); const wd=['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+  document.getElementById('dateLabel').textContent=curDate+' '+wd+(curDate===todayStr()?' · 今天':'');
+  // feedback
+  const day=dayObj(); const fb=document.getElementById('fb');
+  if(day.feedback && day.feedback.text){ fb.classList.remove('hide'); fb.innerHTML='<b>📣 Kiro 的反馈'+(day.feedback.at?' · '+esc(day.feedback.at):'')+'</b><br>'+esc(day.feedback.text).replace(/\n/g,'<br>'); }
+  else { fb.classList.add('hide'); fb.innerHTML=''; }
+  document.getElementById('editBtn').textContent=editMode?'完成编辑':'编辑任务';
+  document.getElementById('who').textContent='当前身份:'+me()+' · 正在看:'+curLearner;
+  renderTasks();
 }
 
-function logout(){
-  localStorage.removeItem('el_gh_token');
-  document.getElementById('main').classList.add('hide');
-  document.getElementById('setup').classList.remove('hide');
+function renderTasks(){
+  const day=dayObj(); const box=document.getElementById('tasks'); box.innerHTML='';
+  if(!day.tasks.length){ const e=document.createElement('div'); e.className='empty'; e.textContent=editMode?'这天还没有任务,点下面"添加任务"。':'这天还没有任务。点"编辑任务"来添加。'; box.appendChild(e); }
+  day.tasks.forEach((t,i)=>{
+    const el=document.createElement('div'); el.className='task'+(t.done?' done':'');
+    if(editMode){
+      const r=document.createElement('div'); r.className='trow';
+      const ti=document.createElement('input'); ti.className='ti'; ti.value=t.title||''; ti.placeholder='任务标题'; ti.oninput=()=>{t.title=ti.value; schedule();};
+      const del=document.createElement('button'); del.type='button'; del.className='del'; del.textContent='✕'; del.onclick=()=>{ day.tasks.splice(i,1); schedule(); renderTasks(); };
+      r.appendChild(ti); r.appendChild(del); el.appendChild(r);
+      const tn=document.createElement('input'); tn.className='tn'; tn.value=t.note||''; tn.placeholder='说明 / 时长(可选)'; tn.oninput=()=>{t.note=tn.value; schedule();};
+      el.appendChild(tn);
+    } else {
+      const lab=document.createElement('label'); lab.className='trow';
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!t.done; cb.onchange=()=>{ t.done=cb.checked; el.classList.toggle('done',t.done); schedule(); };
+      const tt=document.createElement('span'); tt.className='tt'; tt.textContent=t.title||'(未命名任务)';
+      lab.appendChild(cb); lab.appendChild(tt); el.appendChild(lab);
+      if(t.note){ const n=document.createElement('div'); n.className='tnote'; n.textContent=t.note; el.appendChild(n); }
+      const tx=document.createElement('textarea'); tx.className='tx'; tx.value=t.text||''; tx.placeholder='写点什么:做得怎样 / 判断 / 新需求(可选)'; tx.oninput=()=>{t.text=tx.value; schedule();};
+      el.appendChild(tx);
+    }
+    box.appendChild(el);
+  });
+  if(editMode){ const add=document.createElement('button'); add.type='button'; add.className='add'; add.textContent='+ 添加任务'; add.onclick=()=>{ day.tasks.push({id:Date.now(),title:'',note:'',done:false,text:''}); schedule(); renderTasks(); }; box.appendChild(add); }
 }
+
+function shiftDate(n){ const d=new Date(curDate+'T00:00:00'); d.setDate(d.getDate()+n); curDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); render(); }
+function gotoToday(){ curDate=todayStr(); render(); }
+function toggleEdit(){ editMode=!editMode; render(); }
 
 function readHash(){
   const h=location.hash.replace(/^#/,''); if(!h) return;
@@ -154,18 +210,25 @@ function readHash(){
   if(n) localStorage.setItem('el_name', n);
   history.replaceState(null,'',location.pathname+location.search);
 }
+function saveSetup(){
+  const name=document.getElementById('name').value.trim();
+  const token=document.getElementById('token').value.replace(/\s/g,'');
+  if(!token){ alert('把那串 github_pat_… 粘进来'); return; }
+  localStorage.setItem('el_name', name||'我');
+  localStorage.setItem('el_gh_token', token);
+  boot();
+}
+function logout(){ localStorage.removeItem('el_gh_token'); document.getElementById('main').classList.add('hide'); document.getElementById('setup').classList.remove('hide'); }
+
 function boot(){
   readHash();
   if(!tok()){ document.getElementById('setup').classList.remove('hide'); document.getElementById('main').classList.add('hide'); return; }
   document.getElementById('setup').classList.add('hide');
   document.getElementById('main').classList.remove('hide');
-  document.getElementById('who').textContent='当前身份:'+me();
-  const t=document.getElementById('note');
-  t.addEventListener('input', ()=>{ state.demo.note=t.value; schedule(); });
   load();
 }
 
-setInterval(poll, 12000);
+setInterval(poll, 15000);
 boot();
 </script>
 </body>
