@@ -24,7 +24,7 @@
   .setLbl{ font-size:13px; color:#475569; margin:10px 0 4px; }
 
   .tabs{ display:flex; gap:8px; margin-bottom:12px; }
-  .tab{ flex:1; background:#e2e8f0; color:#334155; font-weight:700; padding:11px; border-radius:12px; text-align:center; }
+  .tab{ flex:1; background:#e2e8f0; color:#334155; font-weight:700; padding:11px 4px; border-radius:12px; text-align:center; font-size:14.5px; }
   .tab.on{ background:#2563eb; color:#fff; }
 
   .learners{ display:flex; gap:8px; margin-bottom:10px; }
@@ -37,17 +37,21 @@
 
   .fb{ background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:14px; line-height:1.5; }
 
-  .ck{ display:flex; align-items:flex-start; gap:11px; padding:11px 4px; border-bottom:1px solid #f1f5f9; }
+  .ck{ display:flex; align-items:center; gap:11px; padding:11px 4px; border-bottom:1px solid #f1f5f9; }
   .ck:last-child{ border-bottom:0; }
-  .ck input[type=checkbox]{ width:24px; height:24px; flex:0 0 auto; margin-top:1px; }
-  .ck .t{ font-size:15.5px; line-height:1.35; }
+  .ck input[type=checkbox]{ width:24px; height:24px; flex:0 0 auto; }
+  .ck .t{ font-size:15.5px; line-height:1.35; flex:1; }
+  .ck .pt{ font-size:12px; color:#0ea5e9; font-weight:700; flex:0 0 auto; }
   .ck.done .t{ color:#16a34a; text-decoration:line-through; }
+  .ck.done .pt{ color:#16a34a; }
+  .daysum{ text-align:right; font-size:13px; color:#475569; margin-top:8px; }
+  .daysum b{ color:#0ea5e9; font-size:16px; }
   .tplrow{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .tplrow .pin{ width:60px; flex:0 0 auto; text-align:center; }
   .del{ background:#fee2e2; color:#b91c1c; padding:7px 11px; flex:0 0 auto; }
   .add{ width:100%; background:#eff6ff; color:#2563eb; border:1px dashed #93c5fd; margin-top:6px; }
   .daynote{ margin-top:12px; }
 
-  /* resources */
   .unit{ font-size:14px; color:#475569; margin:0 2px 10px; }
   .res{ border:1px solid #e2e8f0; border-radius:12px; margin-bottom:10px; overflow:hidden; }
   .res h3{ margin:0; font-size:15.5px; padding:13px 14px; background:#f8fafc; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
@@ -56,21 +60,23 @@
   .res .tools{ margin:2px 0 10px; }
   .item{ padding:9px 0; border-bottom:1px solid #f1f5f9; font-size:14.5px; line-height:1.5; }
   .item:last-child{ border-bottom:0; }
-  .en{ font-weight:600; color:#0f172a; }
-  .cn{ color:#475569; }
-  .eg{ color:#64748b; font-size:13px; margin-top:3px; }
+  .en{ font-weight:600; color:#0f172a; } .cn{ color:#475569; } .eg{ color:#64748b; font-size:13px; margin-top:3px; }
   .blurans .en{ filter:blur(5px); }
-  .reveal{ cursor:pointer; color:#2563eb; }
-  .reveal.show{ filter:none !important; }
   .beat{ padding:7px 0 7px 22px; position:relative; font-size:14.5px; line-height:1.45; }
   .beat b{ color:#0f172a; }
   .beat:before{ content:attr(data-n); position:absolute; left:0; top:7px; color:#0ea5e9; font-weight:700; }
   .lkgroup{ margin:8px 0; } .lkgroup .g{ font-weight:700; color:#0f172a; font-size:14px; } .lkgroup .i{ color:#334155; font-size:14px; }
 
+  .kpis{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .kpi{ flex:1 1 44%; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; }
+  .kpi .n{ font-size:22px; font-weight:800; color:#0f172a; } .kpi .l{ font-size:12px; color:#64748b; margin-top:2px; }
+  .hist{ padding:10px 2px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .hist:last-child{ border-bottom:0; }
+  .hist .hd{ font-size:14px; font-weight:600; flex:1; } .hist .hc{ font-size:12px; color:#64748b; }
+  .hist .hp{ font-size:15px; font-weight:800; color:#0ea5e9; }
+
   .status{ font-size:13px; padding:7px 12px; border-radius:999px; background:#eef2f7; color:#475569; }
-  .status.ok{ background:#dcfce7; color:#166534; }
-  .status.warn{ background:#fef3c7; color:#92400e; }
-  .status.err{ background:#fee2e2; color:#991b1b; }
+  .status.ok{ background:#dcfce7; color:#166534; } .status.warn{ background:#fef3c7; color:#92400e; } .status.err{ background:#fee2e2; color:#991b1b; }
   .foot{ margin-top:12px; }
 </style>
 </head>
@@ -78,7 +84,6 @@
 <div class="wrap">
   <h1>英语打卡</h1>
 
-  <!-- 首次:钥匙 -->
   <div class="card hide" id="setup">
     <div class="setLbl">你是谁?(随便填,比如 妈妈 / 孩子)</div>
     <input id="name" placeholder="妈妈">
@@ -87,17 +92,17 @@
     <div class="row" style="margin-top:12px;"><button type="button" onclick="saveSetup()">进入</button></div>
   </div>
 
-  <!-- 主界面 -->
   <div class="hide" id="main">
+    <div class="learners" id="learners"></div>
     <div class="tabs">
       <div class="tab" id="tabCheck" onclick="setView('check')">📋 打卡</div>
       <div class="tab" id="tabRes" onclick="setView('res')">📚 资料</div>
+      <div class="tab" id="tabStats" onclick="setView('stats')">📊 统计</div>
     </div>
 
     <!-- 打卡 -->
     <div class="card" id="viewCheck">
       <div class="fb hide" id="fb"></div>
-      <div class="learners" id="learners"></div>
       <div class="datebar">
         <button type="button" onclick="shiftDate(-1)">‹</button>
         <div class="d" id="dateLabel"></div>
@@ -105,6 +110,7 @@
         <button type="button" onclick="gotoToday()">今天</button>
       </div>
       <div id="checklist"></div>
+      <div class="daysum" id="daysum"></div>
       <textarea class="daynote" id="daynote" placeholder="今天的备注 / 你的判断 / 新需求(可选)"></textarea>
       <div class="row foot">
         <span class="status" id="status">…</span>
@@ -119,7 +125,13 @@
     <div class="card hide" id="viewRes">
       <div class="unit" id="unitLabel"></div>
       <div id="resList"></div>
-      <div class="row foot"><span class="status" id="status2">…</span><button type="button" class="ghost mini" onclick="refreshNow()">拉取最新</button></div>
+    </div>
+
+    <!-- 统计 -->
+    <div class="card hide" id="viewStats">
+      <div class="kpis" id="kpis"></div>
+      <div style="font-weight:700;margin:4px 2px 6px">历史打卡</div>
+      <div id="histList"></div>
     </div>
   </div>
 </div>
@@ -127,17 +139,18 @@
 <script>
 const OWNER='donnaJoey', DATA_REPO='english-learning-data', FILE='progress.json';
 let data=null, sha=null, dirty=false, saving=false, conflicted=false, timer=null;
-let curLearner='我', curDate=todayStr(), editTpl=false, view='check';
-let openRes={};
+let curLearner='我', curDate=todayStr(), editTpl=false, view='check', openRes={};
 
 function tok(){ return localStorage.getItem('el_gh_token')||''; }
 function me(){ return localStorage.getItem('el_name')||'我'; }
 function now(){ return new Date().toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dstr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function esc(s){ return (s==null?'':''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
 function b64decode(b64){ return decodeURIComponent(escape(atob((b64||'').replace(/\n/g,'')))); }
-function status(msg,kind){ ['status','status2'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.textContent=msg; el.className='status'+(kind?' '+kind:''); } }); }
+function wd(ds){ return ['周日','周一','周二','周三','周四','周五','周六'][new Date(ds+'T00:00:00').getDay()]; }
+function status(msg,kind){ const el=document.getElementById('status'); if(el){ el.textContent=msg; el.className='status'+(kind?' '+kind:''); } }
 
 async function gh(method, path, body){
   const res=await fetch('https://api.github.com/repos/'+OWNER+'/'+DATA_REPO+'/'+path,{
@@ -157,6 +170,9 @@ function ensureDoc(){
   if(!data.learners.includes(curLearner)) curLearner=data.learners[0];
 }
 function dayObj(){ const L=data.days[curLearner]||(data.days[curLearner]={}); if(!L[curDate]) L[curDate]={checked:{},note:'',feedback:null}; if(!L[curDate].checked) L[curDate].checked={}; return L[curDate]; }
+function ptMap(L){ const m={}; (data.template[L]||[]).forEach(it=>{ m[it.id]=Number(it.points)||0; }); return m; }
+function dayPoints(L,ds){ const d=(data.days[L]||{})[ds]; if(!d||!d.checked) return 0; const m=ptMap(L); let s=0; for(const id in d.checked){ if(d.checked[id]) s+=(m[id]||0); } return s; }
+function dayCount(L,ds){ const d=(data.days[L]||{})[ds]; if(!d||!d.checked) return 0; let n=0; for(const id in d.checked){ if(d.checked[id]) n++; } return n; }
 
 async function load(){
   status('读取中…');
@@ -183,23 +199,23 @@ async function poll(){
   if(r.status===200 && r.json.sha!==sha){ sha=r.json.sha; try{ data=JSON.parse(b64decode(r.json.content)); }catch(e){ return; } ensureDoc(); render(); status('已更新:别人的改动已同步','ok'); }
 }
 function refreshNow(){ conflicted=false; dirty=false; load(); }
-
 function setView(v){ view=v; render(); }
 
 function render(){
   ensureDoc();
+  const lb=document.getElementById('learners'); lb.innerHTML='';
+  data.learners.forEach(L=>{ const b=document.createElement('button'); b.type='button'; b.className='lrn'+(L===curLearner?' on':''); b.textContent=L; b.onclick=()=>{curLearner=L; render();}; lb.appendChild(b); });
   document.getElementById('tabCheck').className='tab'+(view==='check'?' on':'');
   document.getElementById('tabRes').className='tab'+(view==='res'?' on':'');
+  document.getElementById('tabStats').className='tab'+(view==='stats'?' on':'');
   document.getElementById('viewCheck').classList.toggle('hide', view!=='check');
   document.getElementById('viewRes').classList.toggle('hide', view!=='res');
-  if(view==='check') renderCheck(); else renderRes();
+  document.getElementById('viewStats').classList.toggle('hide', view!=='stats');
+  if(view==='check') renderCheck(); else if(view==='res') renderRes(); else renderStats();
 }
 
 function renderCheck(){
-  const lb=document.getElementById('learners'); lb.innerHTML='';
-  data.learners.forEach(L=>{ const b=document.createElement('button'); b.type='button'; b.className='lrn'+(L===curLearner?' on':''); b.textContent=L; b.onclick=()=>{curLearner=L; render();}; lb.appendChild(b); });
-  const d=new Date(curDate+'T00:00:00'); const wd=['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
-  document.getElementById('dateLabel').textContent=curDate+' '+wd+(curDate===todayStr()?' · 今天':'');
+  const dl=document.getElementById('dateLabel'); dl.textContent=curDate+' '+wd(curDate)+(curDate===todayStr()?' · 今天':'');
   const day=dayObj(); const fb=document.getElementById('fb');
   if(day.feedback && day.feedback.text){ fb.classList.remove('hide'); fb.innerHTML='<b>📣 Kiro 的反馈'+(day.feedback.at?' · '+esc(day.feedback.at):'')+'</b><br>'+esc(day.feedback.text).replace(/\n/g,'<br>'); }
   else { fb.classList.add('hide'); fb.innerHTML=''; }
@@ -211,60 +227,69 @@ function renderCheck(){
 }
 function renderList(){
   const tpl=data.template[curLearner]||[]; const day=dayObj(); const box=document.getElementById('checklist'); box.innerHTML='';
+  const sum=document.getElementById('daysum');
   if(editTpl){
+    sum.textContent='';
     tpl.forEach((it,i)=>{ const r=document.createElement('div'); r.className='tplrow';
       const inp=document.createElement('input'); inp.value=it.title||''; inp.placeholder='打卡项'; inp.oninput=()=>{it.title=inp.value; schedule();};
+      const pin=document.createElement('input'); pin.className='pin'; pin.type='number'; pin.min='0'; pin.value=(it.points==null?'':it.points); pin.placeholder='分'; pin.oninput=()=>{it.points=Number(pin.value)||0; schedule();};
       const del=document.createElement('button'); del.type='button'; del.className='del'; del.textContent='✕'; del.onclick=()=>{ tpl.splice(i,1); schedule(); renderList(); };
-      r.appendChild(inp); r.appendChild(del); box.appendChild(r); });
-    const add=document.createElement('button'); add.type='button'; add.className='add'; add.textContent='+ 添加打卡项'; add.onclick=()=>{ tpl.push({id:'i'+Date.now(),title:''}); schedule(); renderList(); }; box.appendChild(add);
+      r.appendChild(inp); r.appendChild(pin); r.appendChild(del); box.appendChild(r); });
+    const add=document.createElement('button'); add.type='button'; add.className='add'; add.textContent='+ 添加打卡项'; add.onclick=()=>{ tpl.push({id:'i'+Date.now(),title:'',points:1}); schedule(); renderList(); }; box.appendChild(add);
   } else {
     if(!tpl.length){ const e=document.createElement('div'); e.className='meta'; e.textContent='还没有打卡项。点"编辑清单"添加。'; box.appendChild(e); }
     tpl.forEach(it=>{ const done=!!day.checked[it.id]; const row=document.createElement('label'); row.className='ck'+(done?' done':'');
-      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=done; cb.onchange=()=>{ if(cb.checked) day.checked[it.id]=true; else delete day.checked[it.id]; row.className='ck'+(cb.checked?' done':''); schedule(); };
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=done; cb.onchange=()=>{ if(cb.checked) day.checked[it.id]=true; else delete day.checked[it.id]; renderCheck(); schedule(); };
       const t=document.createElement('span'); t.className='t'; t.textContent=it.title||'(未命名)';
-      row.appendChild(cb); row.appendChild(t); box.appendChild(row); });
+      const pt=document.createElement('span'); pt.className='pt'; pt.textContent='+'+(Number(it.points)||0);
+      row.appendChild(cb); row.appendChild(t); row.appendChild(pt); box.appendChild(row); });
+    const total=(tpl||[]).reduce((a,b)=>a+(Number(b.points)||0),0);
+    sum.innerHTML='今日 <b>'+dayPoints(curLearner,curDate)+'</b> / '+total+' 分 · '+dayCount(curLearner,curDate)+'/'+tpl.length+' 项';
   }
 }
-function shiftDate(n){ const d=new Date(curDate+'T00:00:00'); d.setDate(d.getDate()+n); curDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); render(); }
+function shiftDate(n){ const d=new Date(curDate+'T00:00:00'); d.setDate(d.getDate()+n); curDate=dstr(d); render(); }
 function gotoToday(){ curDate=todayStr(); render(); }
 function toggleEditTpl(){ editTpl=!editTpl; render(); }
+
+function renderStats(){
+  const L=curLearner; const days=data.days[L]||{};
+  const dates=Object.keys(days).filter(ds=>dayCount(L,ds)>0).sort().reverse();
+  const today=new Date(todayStr()+'T00:00:00');
+  const inLast=(ds,n)=>{ const d=new Date(ds+'T00:00:00'); return (today-d)/86400000 < n && d<=today; };
+  let p7=0,p30=0,pAll=0;
+  dates.forEach(ds=>{ const p=dayPoints(L,ds); pAll+=p; if(inLast(ds,7))p7+=p; if(inLast(ds,30))p30+=p; });
+  // streak: consecutive days up to today (or yesterday) with any check
+  let streak=0; let cur=new Date(today);
+  if(!(dstr(cur) in days && dayCount(L,dstr(cur))>0)) cur.setDate(cur.getDate()-1);
+  while(dstr(cur) in days && dayCount(L,dstr(cur))>0){ streak++; cur.setDate(cur.getDate()-1); }
+  const kpis=[['近 7 天',p7+' 分'],['近 30 天',p30+' 分'],['累计',pAll+' 分'],['打卡天数',dates.length+' 天'],['连续',streak+' 天']];
+  const kb=document.getElementById('kpis'); kb.innerHTML='';
+  kpis.forEach(([l,n])=>{ const d=document.createElement('div'); d.className='kpi'; d.innerHTML='<div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div>'; kb.appendChild(d); });
+  const hl=document.getElementById('histList'); hl.innerHTML='';
+  if(!dates.length){ hl.innerHTML='<div class="meta">还没有打卡记录。去"打卡"勾几项,这里就有了。</div>'; return; }
+  const tplLen=(data.template[L]||[]).length;
+  dates.slice(0,90).forEach(ds=>{ const row=document.createElement('div'); row.className='hist';
+    row.innerHTML='<div class="hd">'+esc(ds)+' '+esc(wd(ds))+'</div><div class="hc">'+dayCount(L,ds)+'/'+tplLen+' 项</div><div class="hp">'+dayPoints(L,ds)+' 分</div>';
+    row.onclick=()=>{ curDate=ds; setView('check'); }; hl.appendChild(row); });
+}
 
 function renderRes(){
   const res=data.resources||{units:{}}; const u=res.units[res.current]; const box=document.getElementById('resList');
   document.getElementById('unitLabel').textContent = u? (u.title||res.current) : '还没有资料。让 Kiro 写进来就会出现在这里。';
-  box.innerHTML='';
-  if(!u) return;
-  const cards=[
-    ['collocations','固定搭配清单(PET 水平)', renderColl],
-    ['dictation','听写集(词 + 搭配)', renderDict],
-    ['sentences','造句 / 回译集', renderSent],
-    ['retell','Retell 逻辑骨架', renderRetell],
-    ['linkers','连接词', renderLinkers],
-  ];
-  cards.forEach(([key,title,fn])=>{
-    const arr=u[key]; if(!arr||!arr.length) return;
-    const open=!!openRes[key];
+  box.innerHTML=''; if(!u) return;
+  const cards=[['collocations','固定搭配清单(PET 水平)',renderColl],['dictation','听写集(词 + 搭配)',renderDict],['sentences','造句 / 回译集',renderSent],['retell','Retell 逻辑骨架',renderRetell],['linkers','连接词',renderLinkers]];
+  cards.forEach(([key,title,fn])=>{ const arr=u[key]; if(!arr||!arr.length) return; const open=!!openRes[key];
     const c=document.createElement('div'); c.className='res';
     const h=document.createElement('h3'); h.innerHTML='<span>'+esc(title)+' <span class="meta">('+arr.length+')</span></span><span class="arw">'+(open?'▾':'▸')+'</span>';
-    h.onclick=()=>{ openRes[key]=!openRes[key]; renderRes(); };
-    c.appendChild(h);
-    if(open){ const b=document.createElement('div'); b.className='body'; fn(b,arr,key); c.appendChild(b); }
-    box.appendChild(c);
-  });
+    h.onclick=()=>{ openRes[key]=!openRes[key]; renderRes(); }; c.appendChild(h);
+    if(open){ const b=document.createElement('div'); b.className='body'; fn(b,arr); c.appendChild(b); } box.appendChild(c); });
 }
-function answerToggle(b,key){
-  const btn=document.createElement('button'); btn.type='button'; btn.className='ghost mini tools'; btn.textContent='答案:显示';
-  let shown=true;
-  const apply=()=>{ b.classList.toggle('blurans',!shown); btn.textContent='答案:'+(shown?'显示':'隐藏'); };
-  btn.onclick=()=>{ shown=!shown; apply(); };
-  b.appendChild(btn); apply();
-}
+function answerToggle(b){ const btn=document.createElement('button'); btn.type='button'; btn.className='ghost mini tools'; let shown=true; const apply=()=>{ b.classList.toggle('blurans',!shown); btn.textContent='答案:'+(shown?'显示':'隐藏'); }; btn.onclick=()=>{ shown=!shown; apply(); }; b.appendChild(btn); apply(); }
 function renderColl(b,arr){ arr.forEach(x=>{ const d=document.createElement('div'); d.className='item'; d.innerHTML='<span class="en">'+esc(x.en)+'</span> — <span class="cn">'+esc(x.cn)+'</span>'+(x.eg?'<div class="eg">'+esc(x.eg)+'</div>':''); b.appendChild(d); }); }
-function renderDict(b,arr){ answerToggle(b,'dictation'); arr.forEach(x=>{ const d=document.createElement('div'); d.className='item'; d.innerHTML='<span class="en">'+esc(x.en)+'</span> — <span class="cn">'+esc(x.cn)+'</span>'; b.appendChild(d); }); }
-function renderSent(b,arr){ b.appendChild(mk('<div class="meta tools">看中文,先自己写英文,再点展开对答案。</div>')); arr.forEach(x=>{ const d=document.createElement('div'); d.className='item'; d.innerHTML='<div class="cn">'+esc(x.cn)+'</div><div class="en reveal" style="filter:blur(5px)">'+esc(x.en)+'</div>'; const en=d.querySelector('.en'); en.onclick=()=>{ en.style.filter='none'; }; b.appendChild(d); }); }
-function renderRetell(b,arr){ arr.forEach(sk=>{ const h=document.createElement('div'); h.innerHTML='<div style="font-weight:700;margin:8px 0 4px">'+esc(sk.title)+'</div>'; b.appendChild(h); (sk.beats||[]).forEach((bt,i)=>{ const d=document.createElement('div'); d.className='beat'; d.setAttribute('data-n',(i+1)+'.'); d.innerHTML=esc(bt); b.appendChild(d); }); if(sk.note){ const n=document.createElement('div'); n.className='eg'; n.style.marginTop='6px'; n.textContent=sk.note; b.appendChild(n); } }); }
+function renderDict(b,arr){ answerToggle(b); arr.forEach(x=>{ const d=document.createElement('div'); d.className='item'; d.innerHTML='<span class="en">'+esc(x.en)+'</span> — <span class="cn">'+esc(x.cn)+'</span>'; b.appendChild(d); }); }
+function renderSent(b,arr){ const m=document.createElement('div'); m.className='meta tools'; m.textContent='看中文,先自己写英文,再点那行模糊的字对答案。'; b.appendChild(m); arr.forEach(x=>{ const d=document.createElement('div'); d.className='item'; d.innerHTML='<div class="cn">'+esc(x.cn)+'</div><div class="en" style="filter:blur(5px);cursor:pointer">'+esc(x.en)+'</div>'; const en=d.querySelector('.en'); en.onclick=()=>{ en.style.filter='none'; }; b.appendChild(d); }); }
+function renderRetell(b,arr){ arr.forEach(sk=>{ const h=document.createElement('div'); h.innerHTML='<div style="font-weight:700;margin:8px 0 4px">'+esc(sk.title)+'</div>'; b.appendChild(h); (sk.beats||[]).forEach((bt,i)=>{ const d=document.createElement('div'); d.className='beat'; d.setAttribute('data-n',(i+1)+'.'); d.innerHTML=bt; b.appendChild(d); }); if(sk.note){ const n=document.createElement('div'); n.className='eg'; n.style.marginTop='6px'; n.textContent=sk.note; b.appendChild(n); } }); }
 function renderLinkers(b,arr){ arr.forEach(g=>{ const d=document.createElement('div'); d.className='lkgroup'; d.innerHTML='<div class="g">'+esc(g.group)+'</div><div class="i">'+esc((g.items||[]).join(' · '))+'</div>'; b.appendChild(d); }); }
-function mk(html){ const d=document.createElement('div'); d.innerHTML=html; return d.firstChild; }
 
 function readHash(){ const h=location.hash.replace(/^#/,''); if(!h) return; const p=new URLSearchParams(h); const t=p.get('t'), n=p.get('n'); if(t) localStorage.setItem('el_gh_token', t.replace(/\s/g,'')); if(n) localStorage.setItem('el_name', n); history.replaceState(null,'',location.pathname+location.search); }
 function saveSetup(){ const name=document.getElementById('name').value.trim(); const token=document.getElementById('token').value.replace(/\s/g,''); if(!token){ alert('把那串 github_pat_… 粘进来'); return; } localStorage.setItem('el_name', name||'我'); localStorage.setItem('el_gh_token', token); boot(); }
