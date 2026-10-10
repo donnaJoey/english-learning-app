@@ -39,9 +39,10 @@
     <label>GitHub 钥匙(那串 github_pat_… 粘进来,只存在这台设备上)</label>
     <input id="token" placeholder="github_pat_..." autocapitalize="off" autocorrect="off" spellcheck="false">
     <div class="row" style="margin-top:12px;">
-      <button onclick="saveSetup()">进入</button>
+      <button type="button" onclick="saveSetup()">进入</button>
       <span class="meta">钥匙只存在你这台设备的浏览器里,不会上传到网页。</span>
     </div>
+    <div class="meta" id="setupMsg" style="color:#991b1b;margin-top:10px;"></div>
   </div>
 
   <!-- 主界面 -->
@@ -50,12 +51,12 @@
     <textarea id="note" placeholder="在这里打字…"></textarea>
     <div class="row" style="margin-top:12px;">
       <span class="status" id="status">…</span>
-      <button class="ghost" onclick="refreshNow()">拉取最新</button>
+      <button type="button" class="ghost" onclick="refreshNow()">拉取最新</button>
     </div>
     <div class="meta" id="meta"></div>
     <div class="meta" id="who" style="margin-top:14px;"></div>
     <div class="row" style="margin-top:6px;">
-      <button class="ghost" onclick="logout()">换钥匙 / 退出</button>
+      <button type="button" class="ghost" onclick="logout()">换钥匙 / 退出</button>
     </div>
   </div>
 </div>
@@ -98,8 +99,9 @@ async function load(){
   status('读取中…');
   const r = await gh('GET','contents/'+FILE);
   if(r.status===200){ sha=r.json.sha; try{ state=JSON.parse(b64decode(r.json.content)); }catch(e){ state={demo:{note:'',by:'',at:''}}; } if(!state.demo) state.demo={note:'',by:'',at:''}; render(); status('已读取 · '+now(),'ok'); }
-  else if(r.status===404){ sha=null; state={demo:{note:'',by:'',at:''}}; render(); status('还没有数据,随便打点字就会创建'); }
-  else if(r.status===401||r.status===403){ status('钥匙被拒,请重输','err'); logout(); }
+  else if(r.status===401){ status('钥匙没通过 (401):多半是粘的时候漏了几位。点"换钥匙 / 退出"重粘,确认结尾是 …Vez','err'); }
+  else if(r.status===403){ status('钥匙被拒 (403):权限不足。点"换钥匙 / 退出"重试','err'); }
+  else if(r.status===404){ sha=null; status('读不到数据 (404):钥匙可能没覆盖到仓库,或粘漏了。点"换钥匙 / 退出"重试','err'); }
   else { status('读取出错 '+r.status,'err'); }
 }
 
