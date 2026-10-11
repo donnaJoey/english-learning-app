@@ -74,6 +74,16 @@
   .hist:last-child{ border-bottom:0; }
   .hist .hd{ font-size:14px; font-weight:600; flex:1; } .hist .hc{ font-size:12px; color:#64748b; }
   .hist .hp{ font-size:15px; font-weight:800; color:#0ea5e9; }
+  .ck2{ padding:11px 2px; border-bottom:1px solid #f1f5f9; }
+  .ck2:last-child{ border-bottom:0; }
+  .ck2 .t2{ font-size:15px; line-height:1.35; margin-bottom:7px; color:#334155; }
+  .ck2.done .t2{ color:#0f172a; font-weight:600; }
+  .seg{ display:flex; gap:7px; }
+  .seg .lv{ flex:1; background:#f1f5f9; color:#64748b; font-weight:600; font-size:13.5px; padding:8px 4px; border-radius:9px; display:flex; flex-direction:column; align-items:center; gap:1px; line-height:1.2; }
+  .seg .lv .lp{ font-size:11px; font-weight:700; opacity:.85; }
+  .seg .lv.on.lv1{ background:#dcfce7; color:#166534; }
+  .seg .lv.on.lv2{ background:#dbeafe; color:#1e40af; }
+  .seg .lv.on.lv3{ background:#fef3c7; color:#92400e; }
 
   .status{ font-size:13px; padding:7px 12px; border-radius:999px; background:#eef2f7; color:#475569; }
   .status.ok{ background:#dcfce7; color:#166534; } .status.warn{ background:#fef3c7; color:#92400e; } .status.err{ background:#fee2e2; color:#991b1b; }
@@ -203,8 +213,11 @@ function ensureDoc(){
 }
 function dayObj(){ const L=data.days[curLearner]||(data.days[curLearner]={}); if(!L[curDate]) L[curDate]={checked:{},note:'',feedback:null}; if(!L[curDate].checked) L[curDate].checked={}; return L[curDate]; }
 function ptMap(L){ const m={}; (data.template[L]||[]).forEach(it=>{ m[it.id]=Number(it.points)||0; }); return m; }
-function dayPoints(L,ds){ const d=(data.days[L]||{})[ds]; if(!d||!d.checked) return 0; const m=ptMap(L); let s=0; for(const id in d.checked){ if(d.checked[id]) s+=(m[id]||0); } return s; }
+function dayPoints(L,ds){ const d=(data.days[L]||{})[ds]; if(!d||!d.checked) return 0; const m=ptMap(L); let s=0; for(const id in d.checked){ s+=tierValue(m[id]||0, d.checked[id]); } return s; }
 function dayCount(L,ds){ const d=(data.days[L]||{})[ds]; if(!d||!d.checked) return 0; let n=0; for(const id in d.checked){ if(d.checked[id]) n++; } return n; }
+function lvlNum(v){ if(v===true) return 3; v=Number(v); return (v>=1&&v<=3)?v:0; }
+function tierVals(max){ max=Number(max)||0; return [Math.max(1,Math.round(max*0.2)), Math.max(1,Math.round(max*0.6)), max]; }
+function tierValue(max,level){ const n=lvlNum(level); return n? tierVals(max)[n-1] : 0; }
 
 async function load(){
   status('读取中…');
@@ -270,13 +283,21 @@ function renderList(){
     const add=document.createElement('button'); add.type='button'; add.className='add'; add.textContent='+ 添加打卡项'; add.onclick=()=>{ tpl.push({id:'i'+Date.now(),title:'',points:1}); schedule(); renderList(); }; box.appendChild(add);
   } else {
     if(!tpl.length){ const e=document.createElement('div'); e.className='meta'; e.textContent='还没有打卡项。点"编辑清单"添加。'; box.appendChild(e); }
-    tpl.forEach(it=>{ const done=!!day.checked[it.id]; const row=document.createElement('label'); row.className='ck'+(done?' done':'');
-      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=done; cb.onchange=()=>{ if(cb.checked) day.checked[it.id]=true; else delete day.checked[it.id]; renderCheck(); schedule(); };
-      const t=document.createElement('span'); t.className='t'; t.textContent=it.title||'(未命名)';
-      const pt=document.createElement('span'); pt.className='pt'; pt.textContent='+'+(Number(it.points)||0);
-      row.appendChild(cb); row.appendChild(t); row.appendChild(pt); box.appendChild(row); });
+    tpl.forEach(it=>{
+      const max=Number(it.points)||0; const vals=tierVals(max); const cur=lvlNum(day.checked[it.id]);
+      const row=document.createElement('div'); row.className='ck2'+(cur?' done':'');
+      const t=document.createElement('div'); t.className='t2'; t.textContent=it.title||'(未命名)'; row.appendChild(t);
+      const seg=document.createElement('div'); seg.className='seg';
+      [['良好',1],['优秀',2],['卓越',3]].forEach(([lab,lv])=>{
+        const b=document.createElement('button'); b.type='button'; b.className='lv lv'+lv+(cur===lv?' on':'');
+        b.innerHTML=lab+'<span class="lp">'+vals[lv-1]+' 分</span>';
+        b.onclick=()=>{ if(cur===lv) delete day.checked[it.id]; else day.checked[it.id]=lv; renderCheck(); schedule(); };
+        seg.appendChild(b);
+      });
+      row.appendChild(seg); box.appendChild(row);
+    });
     const total=(tpl||[]).reduce((a,b)=>a+(Number(b.points)||0),0);
-    sum.innerHTML='今日 <b>'+dayPoints(curLearner,curDate)+'</b> / '+total+' 分 · '+dayCount(curLearner,curDate)+'/'+tpl.length+' 项';
+    sum.innerHTML='今日 <b>'+dayPoints(curLearner,curDate)+'</b> / '+total+' 分(满分)· '+dayCount(curLearner,curDate)+'/'+tpl.length+' 项';
   }
 }
 function shiftDate(n){ const d=new Date(curDate+'T00:00:00'); d.setDate(d.getDate()+n); curDate=dstr(d); render(); }
