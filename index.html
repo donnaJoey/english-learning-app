@@ -97,6 +97,14 @@
   .spenditem:last-child{ border-bottom:0; }
   .spenditem .sd{ color:#94a3b8; font-size:12px; flex:0 0 auto; } .spenditem .sn{ flex:1; } .spenditem .sa{ color:#dc2626; font-weight:700; flex:0 0 auto; }
   .del.mini{ padding:4px 8px; font-size:12px; }
+  #roBanner{ background:#fef9c3; border:1px solid #fde68a; color:#854d0e; border-radius:10px; padding:8px 12px; margin-bottom:10px; font-size:13px; }
+  .seg .lv:disabled{ opacity:.45; }
+  #ownerBar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  #ownerBar select{ font-size:14px; padding:6px 8px; border:1px solid #cbd5e1; border-radius:8px; }
+  #manageBox{ position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:50; display:flex; align-items:flex-start; justify-content:center; padding:28px 12px; overflow:auto; }
+  #manageBox .mpanel{ background:#fff; border-radius:14px; padding:16px; max-width:560px; width:100%; }
+  .mrow{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .mrow .mn{ flex:1; }
 
   .status{ font-size:13px; padding:7px 12px; border-radius:999px; background:#eef2f7; color:#475569; }
   .status.ok{ background:#dcfce7; color:#166534; } .status.warn{ background:#fef3c7; color:#92400e; } .status.err{ background:#fee2e2; color:#991b1b; }
@@ -156,6 +164,7 @@
         <button type="button" onclick="shiftDate(1)">›</button>
         <button type="button" onclick="gotoToday()">今天</button>
       </div>
+      <div id="roBanner" class="hide"></div>
       <div id="checklist"></div>
       <div class="daysum" id="daysum"></div>
       <div id="bonusBox"></div>
@@ -165,7 +174,7 @@
         <button type="button" class="ghost mini" onclick="refreshNow()">拉取最新</button>
         <button type="button" class="ghost mini" id="editBtn" onclick="toggleEditTpl()">编辑清单</button>
       </div>
-      <div class="meta foot" id="who"></div>
+      <div class="foot" id="ownerBar"></div>
       <div class="row foot"><button type="button" class="ghost mini" onclick="logout()">换钥匙 / 退出</button></div>
     </div>
 
@@ -193,6 +202,7 @@
   </div>
 </div>
 
+<div id="manageBox" class="hide"></div>
 <div id="printArea"></div>
 
 <script>
@@ -203,6 +213,10 @@ let curLearner='我', curDate=todayStr(), editTpl=false, view='check', openRes={
 
 function tok(){ return localStorage.getItem('el_gh_token')||''; }
 function me(){ return localStorage.getItem('el_name')||'我'; }
+function owner(){ return localStorage.getItem('el_owner')||''; }
+function ownerLabel(){ const o=owner(); return o==='__admin__'?'家长':(o||'未设置'); }
+function canEdit(L){ const o=owner(); if(!o) return true; return o==='__admin__'||o===L; }
+function canManage(){ return !owner() || owner()==='__admin__'; }
 function now(){ return new Date().toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function dstr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -220,7 +234,7 @@ async function gh(method, path, body){
   return {status:res.status, json:j};
 }
 
-function emptyDoc(){ return {learners:['我','孩子'], template:{'我':[],'孩子':[]}, days:{'我':{},'孩子':{}}, spend:{'我':[],'孩子':[]}, resources:{current:'',units:{}}}; }
+function emptyDoc(){ return {learners:['Joey','Shelby'], template:{}, days:{}, spend:{}, noRes:['Shelby'], resources:{current:'',units:{}}}; }
 function ensureDoc(){
   if(!data||typeof data!=='object') data=emptyDoc();
   if(!Array.isArray(data.learners)||!data.learners.length) data.learners=['我','孩子'];
@@ -228,6 +242,7 @@ function ensureDoc(){
   data.learners.forEach(L=>{ if(!Array.isArray(data.template[L])) data.template[L]=[]; if(!data.days[L]) data.days[L]={}; (data.template[L]||[]).forEach(it=>{ if(!it.subject) it.subject='英语'; }); });
   data.resources=data.resources||{current:'',units:{}};
   data.spend=data.spend||{}; data.learners.forEach(L=>{ if(!Array.isArray(data.spend[L])) data.spend[L]=[]; });
+  if(!Array.isArray(data.noRes)) data.noRes=[];
   if(!data.learners.includes(curLearner)) curLearner=data.learners[0];
 }
 function dayObj(){ const L=data.days[curLearner]||(data.days[curLearner]={}); if(!L[curDate]) L[curDate]={checked:{},note:'',feedback:null}; if(!L[curDate].checked) L[curDate].checked={}; return L[curDate]; }
@@ -273,9 +288,12 @@ function render(){
   ensureDoc();
   const lb=document.getElementById('learners'); lb.innerHTML='';
   data.learners.forEach(L=>{ const b=document.createElement('button'); b.type='button'; b.className='lrn'+(L===curLearner?' on':''); b.textContent=L; b.onclick=()=>{curLearner=L; render();}; lb.appendChild(b); });
-  document.getElementById('tabCheck').className='tab'+(view==='check'?' on':'');
-  document.getElementById('tabRes').className='tab'+(view==='res'?' on':'');
-  document.getElementById('tabStats').className='tab'+(view==='stats'?' on':'');
+  const hideRes=(data.noRes||[]).includes(curLearner);
+  if(hideRes && view==='res') view='check';
+  document.getElementById('tabCheck').classList.toggle('on', view==='check');
+  document.getElementById('tabRes').classList.toggle('on', view==='res');
+  document.getElementById('tabRes').classList.toggle('hide', hideRes);
+  document.getElementById('tabStats').classList.toggle('on', view==='stats');
   document.getElementById('viewCheck').classList.toggle('hide', view!=='check');
   document.getElementById('viewRes').classList.toggle('hide', view!=='res');
   document.getElementById('viewStats').classList.toggle('hide', view!=='stats');
@@ -283,37 +301,51 @@ function render(){
 }
 
 function renderCheck(){
+  const ed=canEdit(curLearner); if(!ed) editTpl=false;
   const dl=document.getElementById('dateLabel'); dl.textContent=curDate+' '+wd(curDate)+(curDate===todayStr()?' · 今天':'');
   const day=dayObj(); const fb=document.getElementById('fb');
   if(day.feedback && day.feedback.text){ fb.classList.remove('hide'); fb.innerHTML='<b>📣 Kiro 的反馈'+(day.feedback.at?' · '+esc(day.feedback.at):'')+'</b><br>'+esc(day.feedback.text).replace(/\n/g,'<br>'); }
   else { fb.classList.add('hide'); fb.innerHTML=''; }
-  document.getElementById('editBtn').textContent=editTpl?'完成编辑':'编辑清单';
-  document.getElementById('who').textContent='当前身份:'+me()+' · 正在看:'+curLearner;
-  const nt=document.getElementById('daynote'); if(document.activeElement!==nt) nt.value=day.note||'';
-  nt.oninput=()=>{ day.note=nt.value; schedule(); };
+  const eb=document.getElementById('editBtn'); eb.classList.toggle('hide', !ed); eb.textContent=editTpl?'完成编辑':'编辑清单';
+  const ro=document.getElementById('roBanner'); if(!ed){ ro.classList.remove('hide'); ro.textContent='🔒 只读:这是 '+curLearner+' 的,只能看。本机身份:'+ownerLabel(); } else { ro.classList.add('hide'); }
+  const nt=document.getElementById('daynote'); if(document.activeElement!==nt) nt.value=day.note||''; nt.readOnly=!ed; nt.oninput=()=>{ if(!canEdit(curLearner)) return; day.note=nt.value; schedule(); };
+  renderOwnerBar();
   renderList();
   renderBonus(day);
+}
+function renderOwnerBar(){
+  const bar=document.getElementById('ownerBar'); if(!bar) return; bar.innerHTML='';
+  const lab=document.createElement('span'); lab.className='meta'; lab.textContent='本机身份:'; bar.appendChild(lab);
+  const sel=document.createElement('select');
+  if(!owner()){ const op=document.createElement('option'); op.value=''; op.textContent='(未设置,请选)'; op.selected=true; sel.appendChild(op); }
+  data.learners.concat(['__admin__']).forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=(o==='__admin__'?'家长(可编辑所有)':o); if(o===owner()) op.selected=true; sel.appendChild(op); });
+  sel.onchange=()=>{ localStorage.setItem('el_owner', sel.value); if(sel.value && sel.value!=='__admin__' && data.learners.includes(sel.value)) curLearner=sel.value; render(); };
+  bar.appendChild(sel);
+  if(canManage()){ const mb=document.createElement('button'); mb.type='button'; mb.className='ghost mini'; mb.textContent='管理学习者'; mb.onclick=openManage; bar.appendChild(mb); }
 }
 function renderBonus(day){
   const box=document.getElementById('bonusBox'); if(!box) return; box.innerHTML='';
   if(!Array.isArray(day.bonus)) day.bonus=[];
   const tot=day.bonus.reduce((a,b)=>a+(Number(b.amount)||0),0);
   const hd=document.createElement('div'); hd.className='subh'; hd.innerHTML='<span>⭐ Bonus 奖励</span><span class="subp">'+(tot>=0?'+':'')+tot+' 分</span>'; box.appendChild(hd);
-  const row=document.createElement('div'); row.className='spendrow';
-  const amt=document.createElement('input'); amt.type='number'; amt.className='amt'; amt.placeholder='加几分(可负)';
-  const note=document.createElement('input'); note.placeholder='为什么(如 主动预习)';
-  const btn=document.createElement('button'); btn.type='button'; btn.textContent='加 Bonus'; btn.onclick=()=>{ const a=Math.round(Number(amt.value)||0); if(a===0){ alert('先填加几分(可填负数表示扣分)'); return; } day.bonus.push({id:'b'+Date.now(), amount:a, note:note.value.trim()}); renderCheck(); schedule(); };
-  row.appendChild(amt); row.appendChild(note); row.appendChild(btn); box.appendChild(row);
+  const canE=canEdit(curLearner);
+  if(canE){
+    const row=document.createElement('div'); row.className='spendrow';
+    const amt=document.createElement('input'); amt.type='number'; amt.className='amt'; amt.placeholder='加几分(可负)';
+    const note=document.createElement('input'); note.placeholder='为什么(如 主动预习)';
+    const btn=document.createElement('button'); btn.type='button'; btn.textContent='加 Bonus'; btn.onclick=()=>{ const a=Math.round(Number(amt.value)||0); if(a===0){ alert('先填加几分(可填负数表示扣分)'); return; } day.bonus.push({id:'b'+Date.now(), amount:a, note:note.value.trim()}); renderCheck(); schedule(); };
+    row.appendChild(amt); row.appendChild(note); row.appendChild(btn); box.appendChild(row);
+  }
   day.bonus.slice().reverse().forEach(b=>{ const r=document.createElement('div'); r.className='spenditem';
     const a=Number(b.amount)||0;
     r.innerHTML='<span class="sn">'+esc(b.note||'奖励')+'</span><span class="sa" style="color:'+(a>=0?'#16a34a':'#dc2626')+'">'+(a>=0?'+':'')+a+'</span>';
-    const del=document.createElement('button'); del.type='button'; del.className='del mini'; del.textContent='✕'; del.onclick=()=>{ const i=day.bonus.indexOf(b); if(i>=0) day.bonus.splice(i,1); renderCheck(); schedule(); };
-    r.appendChild(del); box.appendChild(r); });
+    if(canE){ const del=document.createElement('button'); del.type='button'; del.className='del mini'; del.textContent='✕'; del.onclick=()=>{ const i=day.bonus.indexOf(b); if(i>=0) day.bonus.splice(i,1); renderCheck(); schedule(); }; r.appendChild(del); }
+    box.appendChild(r); });
 }
 function subjOrder(tpl){ const extra=[...new Set(tpl.map(it=>it.subject||'英语'))].filter(s=>!SUBJECTS.includes(s)); return SUBJECTS.concat(extra); }
 function renderList(){
   const tpl=data.template[curLearner]||[]; const day=dayObj(); const box=document.getElementById('checklist'); box.innerHTML='';
-  const sum=document.getElementById('daysum');
+  const sum=document.getElementById('daysum'); const canE=canEdit(curLearner);
   if(editTpl){
     sum.textContent='';
     subjOrder(tpl).forEach(s=>{
@@ -340,9 +372,9 @@ function renderList(){
         const t=document.createElement('div'); t.className='t2'; t.textContent=it.title||'(未命名)'; row.appendChild(t);
         const seg=document.createElement('div'); seg.className='seg';
         [['良好',1],['优秀',2],['卓越',3]].forEach(([lab,lv])=>{
-          const b=document.createElement('button'); b.type='button'; b.className='lv lv'+lv+(cur===lv?' on':'');
+          const b=document.createElement('button'); b.type='button'; b.className='lv lv'+lv+(cur===lv?' on':''); if(!canE) b.disabled=true;
           b.innerHTML=lab+'<span class="lp">'+vals[lv-1]+' 分</span>';
-          b.onclick=()=>{ if(cur===lv) delete day.checked[it.id]; else day.checked[it.id]=lv; renderCheck(); schedule(); };
+          b.onclick=()=>{ if(!canE) return; if(cur===lv) delete day.checked[it.id]; else day.checked[it.id]=lv; renderCheck(); schedule(); };
           seg.appendChild(b);
         });
         row.appendChild(seg); box.appendChild(row);
@@ -389,16 +421,19 @@ function renderBank(L, earned){
   const bal=document.createElement('div'); bal.className='balcard';
   bal.innerHTML='<div class="baln">余额 <b>'+(earned-spent)+'</b> 分</div><div class="ball">累计获得 '+earned+' · 已花 '+spent+'</div>';
   bank.appendChild(bal);
-  const row=document.createElement('div'); row.className='spendrow';
-  const amt=document.createElement('input'); amt.type='number'; amt.min='1'; amt.className='amt'; amt.placeholder='花多少分';
-  const note=document.createElement('input'); note.placeholder='换了什么(如 看电影)';
-  const btn=document.createElement('button'); btn.type='button'; btn.textContent='记一笔'; btn.onclick=()=>{ const a=Math.round(Number(amt.value)||0); if(a<=0){ alert('先填花了多少分'); return; } (data.spend[L]=data.spend[L]||[]).push({id:'s'+Date.now(), at:now(), amount:a, note:note.value.trim()}); schedule(); renderStats(); };
-  row.appendChild(amt); row.appendChild(note); row.appendChild(btn); bank.appendChild(row);
-  if(!list.length){ const e=document.createElement('div'); e.className='meta'; e.textContent='还没有消费记录。花了积分就在上面记一笔。'; bank.appendChild(e); return; }
+  const canE=canEdit(L);
+  if(canE){
+    const row=document.createElement('div'); row.className='spendrow';
+    const amt=document.createElement('input'); amt.type='number'; amt.min='1'; amt.className='amt'; amt.placeholder='花多少分';
+    const note=document.createElement('input'); note.placeholder='换了什么(如 看电影)';
+    const btn=document.createElement('button'); btn.type='button'; btn.textContent='记一笔'; btn.onclick=()=>{ const a=Math.round(Number(amt.value)||0); if(a<=0){ alert('先填花了多少分'); return; } (data.spend[L]=data.spend[L]||[]).push({id:'s'+Date.now(), at:now(), amount:a, note:note.value.trim()}); schedule(); renderStats(); };
+    row.appendChild(amt); row.appendChild(note); row.appendChild(btn); bank.appendChild(row);
+  }
+  if(!list.length){ const e=document.createElement('div'); e.className='meta'; e.textContent='还没有消费记录。'+(canE?'花了积分就在上面记一笔。':''); bank.appendChild(e); return; }
   list.slice().reverse().forEach(sp=>{ const r=document.createElement('div'); r.className='spenditem';
     r.innerHTML='<span class="sd">'+esc(sp.at||'')+'</span><span class="sn">'+esc(sp.note||'兑换')+'</span><span class="sa">−'+(Number(sp.amount)||0)+'</span>';
-    const del=document.createElement('button'); del.type='button'; del.className='del mini'; del.textContent='✕'; del.onclick=()=>{ const i=list.indexOf(sp); if(i>=0) list.splice(i,1); schedule(); renderStats(); };
-    r.appendChild(del); bank.appendChild(r); });
+    if(canE){ const del=document.createElement('button'); del.type='button'; del.className='del mini'; del.textContent='✕'; del.onclick=()=>{ const i=list.indexOf(sp); if(i>=0) list.splice(i,1); schedule(); renderStats(); }; r.appendChild(del); }
+    bank.appendChild(r); });
 }
 
 function renderRes(){
@@ -450,10 +485,29 @@ function doPrint(){
   document.getElementById('printArea').innerHTML=h;
   setTimeout(()=>window.print(), 60);
 }
+function openManage(){ if(!canManage()){ alert('只有"家长"身份能管理'); return; } document.getElementById('manageBox').classList.remove('hide'); renderManage(); }
+function closeManage(){ document.getElementById('manageBox').classList.add('hide'); }
+function renameLearner(oldN,newN){ if(data.learners.includes(newN)){ alert('已有同名'); return; } data.learners=data.learners.map(x=>x===oldN?newN:x); ['template','days','spend'].forEach(k=>{ if(data[k]&&data[k][oldN]!==undefined){ data[k][newN]=data[k][oldN]; delete data[k][oldN]; } }); if(Array.isArray(data.noRes)) data.noRes=data.noRes.map(x=>x===oldN?newN:x); if(curLearner===oldN) curLearner=newN; if(owner()===oldN) localStorage.setItem('el_owner',newN); schedule(); }
+function delLearner(L){ data.learners=data.learners.filter(x=>x!==L); ['template','days','spend'].forEach(k=>{ if(data[k]) delete data[k][L]; }); if(Array.isArray(data.noRes)) data.noRes=data.noRes.filter(x=>x!==L); if(curLearner===L) curLearner=data.learners[0]||'Joey'; schedule(); }
+function renderManage(){
+  const box=document.getElementById('manageBox'); box.innerHTML='';
+  const p=document.createElement('div'); p.className='mpanel';
+  const top=document.createElement('div'); top.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px'; top.innerHTML='<b>管理学习者</b>'; const cb=document.createElement('button'); cb.type='button'; cb.className='ghost mini'; cb.textContent='关闭'; cb.onclick=closeManage; top.appendChild(cb); p.appendChild(top);
+  const tip=document.createElement('div'); tip.className='meta'; tip.style.marginBottom='8px'; tip.textContent='改名直接改输入框;「资料」勾选=该学习者是否显示学习资料 Tab;删除不可恢复。'; p.appendChild(tip);
+  data.learners.forEach(L=>{
+    const row=document.createElement('div'); row.className='mrow';
+    const nm=document.createElement('input'); nm.className='mn'; nm.value=L; nm.onchange=()=>{ const nn=nm.value.trim(); if(nn&&nn!==L){ renameLearner(L,nn); renderManage(); render(); } };
+    const rl=document.createElement('label'); rl.className='meta'; rl.style.cssText='display:flex;gap:4px;align-items:center'; const rc=document.createElement('input'); rc.type='checkbox'; rc.style.cssText='width:18px;height:18px'; rc.checked=!(data.noRes||[]).includes(L); rc.onchange=()=>{ data.noRes=data.noRes||[]; const i=data.noRes.indexOf(L); if(rc.checked){ if(i>=0) data.noRes.splice(i,1); } else if(i<0){ data.noRes.push(L); } schedule(); render(); }; rl.appendChild(rc); const rt=document.createElement('span'); rt.textContent='资料'; rl.appendChild(rt);
+    const del=document.createElement('button'); del.type='button'; del.className='del mini'; del.textContent='删除'; del.onclick=()=>{ if(confirm('真删除「'+L+'」?TA 的打卡、积分、消费全部删掉,不可恢复。')){ delLearner(L); renderManage(); render(); } };
+    row.appendChild(nm); row.appendChild(rl); row.appendChild(del); p.appendChild(row);
+  });
+  const ar=document.createElement('div'); ar.className='mrow'; ar.style.marginTop='10px'; const ai=document.createElement('input'); ai.className='mn'; ai.placeholder='新学习者名字'; const ab=document.createElement('button'); ab.type='button'; ab.textContent='添加'; ab.onclick=()=>{ const nn=ai.value.trim(); if(!nn) return; if(data.learners.includes(nn)){ alert('已有同名'); return; } data.learners.push(nn); ensureDoc(); schedule(); renderManage(); render(); }; ar.appendChild(ai); ar.appendChild(ab); p.appendChild(ar);
+  box.appendChild(p);
+}
 function readHash(){ const h=location.hash.replace(/^#/,''); if(!h) return; const p=new URLSearchParams(h); const t=p.get('t'), n=p.get('n'); if(t) localStorage.setItem('el_gh_token', t.replace(/\s/g,'')); if(n) localStorage.setItem('el_name', n); }
 function saveSetup(){ const name=document.getElementById('name').value.trim(); const token=document.getElementById('token').value.replace(/\s/g,''); if(!token){ alert('把那串 github_pat_… 粘进来'); return; } localStorage.setItem('el_name', name||'我'); localStorage.setItem('el_gh_token', token); boot(); }
 function logout(){ localStorage.removeItem('el_gh_token'); document.getElementById('main').classList.add('hide'); document.getElementById('setup').classList.remove('hide'); }
-function boot(){ readHash(); if(!tok()){ document.getElementById('setup').classList.remove('hide'); document.getElementById('main').classList.add('hide'); return; } document.getElementById('setup').classList.add('hide'); document.getElementById('main').classList.remove('hide'); load(); }
+function boot(){ readHash(); if(!tok()){ document.getElementById('setup').classList.remove('hide'); document.getElementById('main').classList.add('hide'); return; } document.getElementById('setup').classList.add('hide'); document.getElementById('main').classList.remove('hide'); const o=owner(); if(o && o!=='__admin__') curLearner=o; load(); }
 
 setInterval(poll, 15000);
 boot();
