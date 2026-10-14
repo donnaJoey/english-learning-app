@@ -158,6 +158,7 @@
       </div>
       <div id="checklist"></div>
       <div class="daysum" id="daysum"></div>
+      <div id="bonusBox"></div>
       <textarea class="daynote" id="daynote" placeholder="今天的备注 / 你的判断 / 新需求(可选)"></textarea>
       <div class="row foot">
         <span class="status" id="status">…</span>
@@ -231,8 +232,9 @@ function ensureDoc(){
 }
 function dayObj(){ const L=data.days[curLearner]||(data.days[curLearner]={}); if(!L[curDate]) L[curDate]={checked:{},note:'',feedback:null}; if(!L[curDate].checked) L[curDate].checked={}; return L[curDate]; }
 function ptMap(L){ const m={}; (data.template[L]||[]).forEach(it=>{ m[it.id]=Number(it.points)||0; }); return m; }
-function dayPoints(L,ds){ const d=(data.days[L]||{})[ds]; if(!d||!d.checked) return 0; const m=ptMap(L); let s=0; for(const id in d.checked){ s+=tierValue(m[id]||0, d.checked[id]); } return s; }
+function dayPoints(L,ds){ const d=(data.days[L]||{})[ds]; if(!d) return 0; const m=ptMap(L); let s=0; if(d.checked){ for(const id in d.checked){ s+=tierValue(m[id]||0, d.checked[id]); } } if(Array.isArray(d.bonus)){ d.bonus.forEach(b=>{ s+=Number(b.amount)||0; }); } return s; }
 function dayCount(L,ds){ const d=(data.days[L]||{})[ds]; if(!d||!d.checked) return 0; let n=0; for(const id in d.checked){ if(d.checked[id]) n++; } return n; }
+function dayActive(L,ds){ const d=(data.days[L]||{})[ds]; if(!d) return false; return dayCount(L,ds)>0 || (Array.isArray(d.bonus)&&d.bonus.length>0); }
 function lvlNum(v){ if(v===true) return 3; v=Number(v); return (v>=1&&v<=3)?v:0; }
 function tierVals(max){ max=Number(max)||0; return [Math.max(1,Math.round(max*0.2)), Math.max(1,Math.round(max*0.6)), max]; }
 function tierValue(max,level){ const n=lvlNum(level); return n? tierVals(max)[n-1] : 0; }
@@ -290,6 +292,23 @@ function renderCheck(){
   const nt=document.getElementById('daynote'); if(document.activeElement!==nt) nt.value=day.note||'';
   nt.oninput=()=>{ day.note=nt.value; schedule(); };
   renderList();
+  renderBonus(day);
+}
+function renderBonus(day){
+  const box=document.getElementById('bonusBox'); if(!box) return; box.innerHTML='';
+  if(!Array.isArray(day.bonus)) day.bonus=[];
+  const tot=day.bonus.reduce((a,b)=>a+(Number(b.amount)||0),0);
+  const hd=document.createElement('div'); hd.className='subh'; hd.innerHTML='<span>⭐ Bonus 奖励</span><span class="subp">'+(tot>=0?'+':'')+tot+' 分</span>'; box.appendChild(hd);
+  const row=document.createElement('div'); row.className='spendrow';
+  const amt=document.createElement('input'); amt.type='number'; amt.className='amt'; amt.placeholder='加几分(可负)';
+  const note=document.createElement('input'); note.placeholder='为什么(如 主动预习)';
+  const btn=document.createElement('button'); btn.type='button'; btn.textContent='加 Bonus'; btn.onclick=()=>{ const a=Math.round(Number(amt.value)||0); if(a===0){ alert('先填加几分(可填负数表示扣分)'); return; } day.bonus.push({id:'b'+Date.now(), amount:a, note:note.value.trim()}); renderCheck(); schedule(); };
+  row.appendChild(amt); row.appendChild(note); row.appendChild(btn); box.appendChild(row);
+  day.bonus.slice().reverse().forEach(b=>{ const r=document.createElement('div'); r.className='spenditem';
+    const a=Number(b.amount)||0;
+    r.innerHTML='<span class="sn">'+esc(b.note||'奖励')+'</span><span class="sa" style="color:'+(a>=0?'#16a34a':'#dc2626')+'">'+(a>=0?'+':'')+a+'</span>';
+    const del=document.createElement('button'); del.type='button'; del.className='del mini'; del.textContent='✕'; del.onclick=()=>{ const i=day.bonus.indexOf(b); if(i>=0) day.bonus.splice(i,1); renderCheck(); schedule(); };
+    r.appendChild(del); box.appendChild(r); });
 }
 function subjOrder(tpl){ const extra=[...new Set(tpl.map(it=>it.subject||'英语'))].filter(s=>!SUBJECTS.includes(s)); return SUBJECTS.concat(extra); }
 function renderList(){
@@ -330,7 +349,9 @@ function renderList(){
       });
     });
     const total=(tpl||[]).reduce((a,b)=>a+(Number(b.points)||0),0);
-    const parts=subjOrder(tpl).filter(s=>tpl.some(it=>(it.subject||'英语')===s)).map(s=>s+' '+(bs[s]||0)).join(' · ');
+    const bonusTot=(day.bonus||[]).reduce((a,b)=>a+(Number(b.amount)||0),0);
+    let parts=subjOrder(tpl).filter(s=>tpl.some(it=>(it.subject||'英语')===s)).map(s=>s+' '+(bs[s]||0)).join(' · ');
+    if(bonusTot) parts+=(parts?' · ':'')+'奖励 '+(bonusTot>=0?'+':'')+bonusTot;
     sum.innerHTML='今日 <b>'+dayPoints(curLearner,curDate)+'</b> / '+total+' 分 · '+dayCount(curLearner,curDate)+'/'+tpl.length+' 项'+(parts?'<br><span class="submeta">'+parts+'</span>':'');
   }
 }
@@ -340,15 +361,15 @@ function toggleEditTpl(){ editTpl=!editTpl; render(); }
 
 function renderStats(){
   const L=curLearner; const days=data.days[L]||{};
-  const dates=Object.keys(days).filter(ds=>dayCount(L,ds)>0).sort().reverse();
+  const dates=Object.keys(days).filter(ds=>dayActive(L,ds)).sort().reverse();
   const today=new Date(todayStr()+'T00:00:00');
   const inLast=(ds,n)=>{ const d=new Date(ds+'T00:00:00'); return (today-d)/86400000 < n && d<=today; };
   let p7=0,p30=0,pAll=0;
   dates.forEach(ds=>{ const p=dayPoints(L,ds); pAll+=p; if(inLast(ds,7))p7+=p; if(inLast(ds,30))p30+=p; });
   // streak: consecutive days up to today (or yesterday) with any check
   let streak=0; let cur=new Date(today);
-  if(!(dstr(cur) in days && dayCount(L,dstr(cur))>0)) cur.setDate(cur.getDate()-1);
-  while(dstr(cur) in days && dayCount(L,dstr(cur))>0){ streak++; cur.setDate(cur.getDate()-1); }
+  if(!dayActive(L,dstr(cur))) cur.setDate(cur.getDate()-1);
+  while(dayActive(L,dstr(cur))){ streak++; cur.setDate(cur.getDate()-1); }
   const kpis=[['近 7 天',p7+' 分'],['近 30 天',p30+' 分'],['累计',pAll+' 分'],['打卡天数',dates.length+' 天'],['连续',streak+' 天']];
   const kb=document.getElementById('kpis'); kb.innerHTML='';
   kpis.forEach(([l,n])=>{ const d=document.createElement('div'); d.className='kpi'; d.innerHTML='<div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div>'; kb.appendChild(d); });
