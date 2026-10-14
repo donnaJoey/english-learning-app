@@ -84,6 +84,10 @@
   .seg .lv.on.lv1{ background:#dcfce7; color:#166534; }
   .seg .lv.on.lv2{ background:#dbeafe; color:#1e40af; }
   .seg .lv.on.lv3{ background:#fef3c7; color:#92400e; }
+  .subh{ display:flex; justify-content:space-between; align-items:center; font-weight:700; color:#0f172a; font-size:14px; margin:16px 0 6px; padding-bottom:4px; border-bottom:1px solid #e2e8f0; }
+  .subh .subp{ font-weight:600; color:#0ea5e9; font-size:12.5px; }
+  .submeta{ color:#64748b; font-size:12.5px; }
+  .tplrow .sin{ width:78px; flex:0 0 auto; }
 
   .status{ font-size:13px; padding:7px 12px; border-radius:999px; background:#eef2f7; color:#475569; }
   .status.ok{ background:#dcfce7; color:#166534; } .status.warn{ background:#fef3c7; color:#92400e; } .status.err{ background:#fee2e2; color:#991b1b; }
@@ -170,6 +174,7 @@
     <!-- 统计 -->
     <div class="card hide" id="viewStats">
       <div class="kpis" id="kpis"></div>
+      <div class="submeta" id="subStats" style="margin:0 2px 10px"></div>
       <div style="font-weight:700;margin:4px 2px 6px">历史打卡</div>
       <div id="histList"></div>
     </div>
@@ -180,6 +185,7 @@
 
 <script>
 const OWNER='donnaJoey', DATA_REPO='english-learning-data', FILE='progress.json';
+const SUBJECTS=['语文','英语','数学'];
 let data=null, sha=null, dirty=false, saving=false, conflicted=false, timer=null;
 let curLearner='我', curDate=todayStr(), editTpl=false, view='check', openRes={}, curUnit=null;
 
@@ -207,7 +213,7 @@ function ensureDoc(){
   if(!data||typeof data!=='object') data=emptyDoc();
   if(!Array.isArray(data.learners)||!data.learners.length) data.learners=['我','孩子'];
   data.template=data.template||{}; data.days=data.days||{};
-  data.learners.forEach(L=>{ if(!Array.isArray(data.template[L])) data.template[L]=[]; if(!data.days[L]) data.days[L]={}; });
+  data.learners.forEach(L=>{ if(!Array.isArray(data.template[L])) data.template[L]=[]; if(!data.days[L]) data.days[L]={}; (data.template[L]||[]).forEach(it=>{ if(!it.subject) it.subject='英语'; }); });
   data.resources=data.resources||{current:'',units:{}};
   if(!data.learners.includes(curLearner)) curLearner=data.learners[0];
 }
@@ -218,6 +224,9 @@ function dayCount(L,ds){ const d=(data.days[L]||{})[ds]; if(!d||!d.checked) retu
 function lvlNum(v){ if(v===true) return 3; v=Number(v); return (v>=1&&v<=3)?v:0; }
 function tierVals(max){ max=Number(max)||0; return [Math.max(1,Math.round(max*0.2)), Math.max(1,Math.round(max*0.6)), max]; }
 function tierValue(max,level){ const n=lvlNum(level); return n? tierVals(max)[n-1] : 0; }
+function subjMap(L){ const m={}; (data.template[L]||[]).forEach(it=>{ m[it.id]=it.subject||'英语'; }); return m; }
+function todayBySubject(L,ds){ const sm=subjMap(L), m=ptMap(L), out={}; const d=(data.days[L]||{})[ds]; if(d&&d.checked){ for(const id in d.checked){ const v=tierValue(m[id]||0,d.checked[id]); if(v){ const s=sm[id]||'英语'; out[s]=(out[s]||0)+v; } } } return out; }
+function pointsBySubject(L,filt){ const sm=subjMap(L), m=ptMap(L), out={}; const days=data.days[L]||{}; Object.keys(days).forEach(ds=>{ if(filt&&!filt(ds)) return; const d=days[ds]; if(!d||!d.checked) return; for(const id in d.checked){ const v=tierValue(m[id]||0,d.checked[id]); if(v){ const s=sm[id]||'英语'; out[s]=(out[s]||0)+v; } } }); return out; }
 
 async function load(){
   status('读取中…');
@@ -270,34 +279,47 @@ function renderCheck(){
   nt.oninput=()=>{ day.note=nt.value; schedule(); };
   renderList();
 }
+function subjOrder(tpl){ const extra=[...new Set(tpl.map(it=>it.subject||'英语'))].filter(s=>!SUBJECTS.includes(s)); return SUBJECTS.concat(extra); }
 function renderList(){
   const tpl=data.template[curLearner]||[]; const day=dayObj(); const box=document.getElementById('checklist'); box.innerHTML='';
   const sum=document.getElementById('daysum');
   if(editTpl){
     sum.textContent='';
-    tpl.forEach((it,i)=>{ const r=document.createElement('div'); r.className='tplrow';
-      const inp=document.createElement('input'); inp.value=it.title||''; inp.placeholder='打卡项'; inp.oninput=()=>{it.title=inp.value; schedule();};
-      const pin=document.createElement('input'); pin.className='pin'; pin.type='number'; pin.min='0'; pin.value=(it.points==null?'':it.points); pin.placeholder='分'; pin.oninput=()=>{it.points=Number(pin.value)||0; schedule();};
-      const del=document.createElement('button'); del.type='button'; del.className='del'; del.textContent='✕'; del.onclick=()=>{ tpl.splice(i,1); schedule(); renderList(); };
-      r.appendChild(inp); r.appendChild(pin); r.appendChild(del); box.appendChild(r); });
-    const add=document.createElement('button'); add.type='button'; add.className='add'; add.textContent='+ 添加打卡项'; add.onclick=()=>{ tpl.push({id:'i'+Date.now(),title:'',points:1}); schedule(); renderList(); }; box.appendChild(add);
+    subjOrder(tpl).forEach(s=>{
+      const hd=document.createElement('div'); hd.className='subh'; hd.innerHTML='<span>'+esc(s)+'</span>'; box.appendChild(hd);
+      tpl.forEach(it=>{ if((it.subject||'英语')!==s) return;
+        const r=document.createElement('div'); r.className='tplrow';
+        const inp=document.createElement('input'); inp.value=it.title||''; inp.placeholder='打卡项'; inp.oninput=()=>{it.title=inp.value; schedule();};
+        const sel=document.createElement('select'); sel.className='sin'; SUBJECTS.forEach(ss=>{ const o=document.createElement('option'); o.value=ss; o.textContent=ss; if(ss===(it.subject||'英语')) o.selected=true; sel.appendChild(o); }); sel.onchange=()=>{ it.subject=sel.value; schedule(); renderList(); };
+        const pin=document.createElement('input'); pin.className='pin'; pin.type='number'; pin.min='0'; pin.value=(it.points==null?'':it.points); pin.placeholder='分'; pin.oninput=()=>{it.points=Number(pin.value)||0; schedule();};
+        const del=document.createElement('button'); del.type='button'; del.className='del'; del.textContent='✕'; del.onclick=()=>{ const i=tpl.indexOf(it); if(i>=0) tpl.splice(i,1); schedule(); renderList(); };
+        r.appendChild(inp); r.appendChild(sel); r.appendChild(pin); r.appendChild(del); box.appendChild(r); });
+      const add=document.createElement('button'); add.type='button'; add.className='add'; add.textContent='+ 加一项到「'+s+'」'; add.onclick=()=>{ tpl.push({id:'i'+Date.now(),title:'',points:1,subject:s}); schedule(); renderList(); }; box.appendChild(add);
+    });
   } else {
     if(!tpl.length){ const e=document.createElement('div'); e.className='meta'; e.textContent='还没有打卡项。点"编辑清单"添加。'; box.appendChild(e); }
-    tpl.forEach(it=>{
-      const max=Number(it.points)||0; const vals=tierVals(max); const cur=lvlNum(day.checked[it.id]);
-      const row=document.createElement('div'); row.className='ck2'+(cur?' done':'');
-      const t=document.createElement('div'); t.className='t2'; t.textContent=it.title||'(未命名)'; row.appendChild(t);
-      const seg=document.createElement('div'); seg.className='seg';
-      [['良好',1],['优秀',2],['卓越',3]].forEach(([lab,lv])=>{
-        const b=document.createElement('button'); b.type='button'; b.className='lv lv'+lv+(cur===lv?' on':'');
-        b.innerHTML=lab+'<span class="lp">'+vals[lv-1]+' 分</span>';
-        b.onclick=()=>{ if(cur===lv) delete day.checked[it.id]; else day.checked[it.id]=lv; renderCheck(); schedule(); };
-        seg.appendChild(b);
+    const bs=todayBySubject(curLearner,curDate);
+    subjOrder(tpl).forEach(s=>{
+      const items=tpl.filter(it=>(it.subject||'英语')===s); if(!items.length) return;
+      const mx=items.reduce((a,b)=>a+(Number(b.points)||0),0);
+      const hd=document.createElement('div'); hd.className='subh'; hd.innerHTML='<span>'+esc(s)+'</span><span class="subp">'+(bs[s]||0)+' / '+mx+' 分</span>'; box.appendChild(hd);
+      items.forEach(it=>{
+        const max=Number(it.points)||0; const vals=tierVals(max); const cur=lvlNum(day.checked[it.id]);
+        const row=document.createElement('div'); row.className='ck2'+(cur?' done':'');
+        const t=document.createElement('div'); t.className='t2'; t.textContent=it.title||'(未命名)'; row.appendChild(t);
+        const seg=document.createElement('div'); seg.className='seg';
+        [['良好',1],['优秀',2],['卓越',3]].forEach(([lab,lv])=>{
+          const b=document.createElement('button'); b.type='button'; b.className='lv lv'+lv+(cur===lv?' on':'');
+          b.innerHTML=lab+'<span class="lp">'+vals[lv-1]+' 分</span>';
+          b.onclick=()=>{ if(cur===lv) delete day.checked[it.id]; else day.checked[it.id]=lv; renderCheck(); schedule(); };
+          seg.appendChild(b);
+        });
+        row.appendChild(seg); box.appendChild(row);
       });
-      row.appendChild(seg); box.appendChild(row);
     });
     const total=(tpl||[]).reduce((a,b)=>a+(Number(b.points)||0),0);
-    sum.innerHTML='今日 <b>'+dayPoints(curLearner,curDate)+'</b> / '+total+' 分(满分)· '+dayCount(curLearner,curDate)+'/'+tpl.length+' 项';
+    const parts=subjOrder(tpl).filter(s=>tpl.some(it=>(it.subject||'英语')===s)).map(s=>s+' '+(bs[s]||0)).join(' · ');
+    sum.innerHTML='今日 <b>'+dayPoints(curLearner,curDate)+'</b> / '+total+' 分 · '+dayCount(curLearner,curDate)+'/'+tpl.length+' 项'+(parts?'<br><span class="submeta">'+parts+'</span>':'');
   }
 }
 function shiftDate(n){ const d=new Date(curDate+'T00:00:00'); d.setDate(d.getDate()+n); curDate=dstr(d); render(); }
@@ -318,6 +340,7 @@ function renderStats(){
   const kpis=[['近 7 天',p7+' 分'],['近 30 天',p30+' 分'],['累计',pAll+' 分'],['打卡天数',dates.length+' 天'],['连续',streak+' 天']];
   const kb=document.getElementById('kpis'); kb.innerHTML='';
   kpis.forEach(([l,n])=>{ const d=document.createElement('div'); d.className='kpi'; d.innerHTML='<div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div>'; kb.appendChild(d); });
+  const bySub=pointsBySubject(L); const sb=document.getElementById('subStats'); if(sb){ const parts=subjOrder(data.template[L]||[]).filter(s=>bySub[s]).map(s=>s+' '+bySub[s]+' 分'); sb.textContent=parts.length?('分科目累计:'+parts.join('  ·  ')):''; }
   const hl=document.getElementById('histList'); hl.innerHTML='';
   if(!dates.length){ hl.innerHTML='<div class="meta">还没有打卡记录。去"打卡"勾几项,这里就有了。</div>'; return; }
   const tplLen=(data.template[L]||[]).length;
